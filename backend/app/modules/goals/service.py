@@ -89,8 +89,8 @@ class GoalService:
         return GoalOut(**row, recommended_funds=_attach_recommended_funds(row["fund_category_mix"]))
 
     @staticmethod
-    def list_goals(access_token: str, user_id: str) -> list[GoalOut]:
-        rows = GoalRepository.list_by_user(access_token, user_id)
+    def list_goals(access_token: str, user_id: str, limit: int = 20, offset: int = 0) -> list[GoalOut]:
+        rows = GoalRepository.list_by_user(access_token, user_id, limit=limit, offset=offset)
         return [
             GoalOut(**row, recommended_funds=_attach_recommended_funds(row["fund_category_mix"]))
             for row in rows

@@ -10,11 +10,17 @@ class GoalRepository:
         row = {**payload, "user_id": user_id}
         res = client.table(TABLE).insert(row).execute()
         return res.data[0]
-
     @staticmethod
-    def list_by_user(access_token: str, user_id: str) -> list[dict]:
+    def list_by_user(access_token: str, user_id: str, limit: int = 20, offset: int = 0) -> list[dict]:
         client = supabase_as_user(access_token)
-        res = client.table(TABLE).select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
+        res = (
+            client.table(TABLE)
+            .select("*")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .range(offset, offset + limit - 1)
+            .execute()
+        )
         return res.data
 
     @staticmethod

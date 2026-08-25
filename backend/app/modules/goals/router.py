@@ -9,8 +9,7 @@ router = APIRouter(prefix="/goals", tags=["goals"])
 
 @router.post("/check", response_model=GoalCheckResponse)
 def check_goal(payload: GoalCreate):
-    # Deliberately no auth required here — this is a pure "what-if" preview,
-    # nothing is read from or written to the database.
+    
     return GoalService.check(payload)
 
 
@@ -25,10 +24,12 @@ def create_goal(
 
 @router.get("", response_model=list[GoalOut])
 def list_goals(
+    limit: int = 20,
+    offset: int = 0,
     user: UserOut = Depends(get_current_user),
     token: str = Depends(get_access_token),
 ):
-    return GoalService.list_goals(token, user.id)
+    return GoalService.list_goals(token, user.id, limit=limit, offset=offset)
 
 
 @router.get("/{goal_id}", response_model=GoalOut)
