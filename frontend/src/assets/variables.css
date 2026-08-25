@@ -1,0 +1,36 @@
+/* frontend/src/assets/variables.css */
+:root {
+  --bg-primary: hsl(220, 15%, 97%);
+  --bg-surface: hsl(0, 0%, 100%);
+  --bg-surface-dark: hsl(220, 20%, 18%);
+  
+  --text-primary: hsl(220, 20%, 15%);
+  --text-secondary: hsl(220, 10%, 48%);
+  --text-light: hsl(220, 15%, 95%);
+  --text-muted-light: hsl(220, 10%, 70%);
+
+  --border-color: hsl(220, 10%, 88%);
+  --border-color-dark: hsl(220, 15%, 25%);
+
+  --accent-color: hsl(220, 60%, 45%);
+  --accent-color-hover: hsl(220, 60%, 38%);
+  --accent-color-light: hsl(220, 50%, 93%);
+
+  --success-color: hsl(140, 45%, 40%);
+  --success-color-bg: hsl(140, 40%, 93%);
+  
+  --warning-color: hsl(35, 65%, 45%);
+  --warning-color-bg: hsl(35, 60%, 93%);
+
+  --danger-color: hsl(0, 60%, 45%);
+  --danger-color-bg: hsl(0, 50%, 93%);
+
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --transition-speed: 0.15s;
+  
+  --sidebar-width: 240px;
+  --header-height: 56px;
+}

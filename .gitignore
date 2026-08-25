@@ -1,0 +1,81 @@
+# =========================================
+# ENVIRONMENT VARIABLES & SECRETS
+# =========================================
+
+.env
+.env.*
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+
+# =========================================
+# PYTHON BACKEND
+# =========================================
+
+# Virtual environments
+backend/venv/
+backend/env/
+backend/.venv/
+
+# Python cache
+backend/__pycache__/
+backend/**/*.pyc
+__pycache__/
+*.py[cod]
+
+# Pytest
+backend/.pytest_cache/
+
+# Python coverage
+.coverage
+htmlcov/
+coverage.xml
+
+# Python build files
+*.egg-info/
+.eggs/
+
+
+# =========================================
+# FRONTEND - VITE / REACT
+# =========================================
+
+# Logs
+frontend/logs/
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+frontend/node_modules/
+node_modules/
+
+# Build output
+frontend/dist/
+frontend/dist-ssr/
+dist/
+dist-ssr/
+
+# Local environment files
+*.local
+
+
+# =========================================
+# EDITOR DIRECTORIES & FILES
+# =========================================
+
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
