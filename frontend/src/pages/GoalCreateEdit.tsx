@@ -187,7 +187,7 @@ export const GoalCreateEdit: React.FC = () => {
                   render={({ field }) => (
                     <SliderField
                       label="Target Amount"
-                      min={50000}
+                      min={5000}
                       max={100000000}
                       step={50000}
                       value={field.value}
@@ -395,7 +395,7 @@ export const GoalCreateEdit: React.FC = () => {
                     )}
                   </div>
                 )}
-                
+
                 {simulationResult.feasibility.status === 'borderline' && (
                   <div className="shortfall-info mt-3 text-warning">
                     <p className="text-xs text-secondary m-0">{simulationResult.feasibility.message}</p>
