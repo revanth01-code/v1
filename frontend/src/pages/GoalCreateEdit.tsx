@@ -189,7 +189,7 @@ export const GoalCreateEdit: React.FC = () => {
                       label="Target Amount"
                       min={5000}
                       max={100000000}
-                      step={50000}
+                      step={5000}
                       value={field.value}
                       onChange={field.onChange}
                       formatValue={formatINR}
