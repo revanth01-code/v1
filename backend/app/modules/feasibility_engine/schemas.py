@@ -14,11 +14,12 @@ class FeasibilityInput(BaseModel):
 
 
 class FeasibilityResult(BaseModel):
-    status: Literal["feasible", "borderline", "infeasible"]
+    status: Literal["highly_feasible", "feasible", "borderline", "at_risk", "unlikely"]
     months: int
     inflation_adjusted_target: float
     projected_value: float
     shortfall: Optional[float] = None
     suggested_monthly_sip: Optional[float] = None
+    contribution_difference: float = 0.0
     suggested_extended_months: Optional[int] = None
     message: Optional[str] = None

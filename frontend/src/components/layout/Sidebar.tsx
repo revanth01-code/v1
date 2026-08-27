@@ -11,7 +11,8 @@ import {
   MessageSquare,
   User,
   LogOut,
-  X
+  X,
+  Sliders
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -25,6 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const menuItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Goals Planner', path: '/goals', icon: Target },
+    { name: 'What-If Lab', path: '/what-if', icon: Sliders },
     { name: 'Emergency Fund', path: '/emergency-fund', icon: ShieldAlert },
     { name: 'Retirement Planner', path: '/retirement', icon: Hourglass },
     { name: 'Fund Explorer', path: '/funds', icon: TrendingUp },

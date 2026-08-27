@@ -55,15 +55,8 @@ class FeasibilityEngine:
             months, input.monthly_contribution, input.lumpsum_amount, input.expected_return_pct
         )
 
-        if projected_value >= adjusted_target:
-            return FeasibilityResult(
-                status="feasible",
-                months=months,
-                inflation_adjusted_target=round(adjusted_target, 2),
-                projected_value=round(projected_value, 2),
-            )
-
-        shortfall = adjusted_target - projected_value
+        ratio = projected_value / adjusted_target if adjusted_target > 0 else 1.0
+        shortfall = max(adjusted_target - projected_value, 0.0)
 
         # How much lumpsum alone is expected to grow to by the target date —
         # subtracting this from the target tells us what the SIP alone still
@@ -76,6 +69,8 @@ class FeasibilityEngine:
             else None
         )
 
+        contrib_diff = max((suggested_sip or 0.0) - input.monthly_contribution, 0.0) if suggested_sip is not None else 0.0
+
         suggested_extended_months = _find_required_months(
             input.monthly_contribution,
             input.lumpsum_amount,
@@ -84,18 +79,21 @@ class FeasibilityEngine:
             input.target_amount,
         )
 
-        if projected_value >= adjusted_target * BORDERLINE_THRESHOLD:
+        if ratio >= 1.15:
+            status = "highly_feasible"
+            message = "Your plan is in excellent shape! The projected corpus is expected to comfortably exceed your inflation-adjusted target."
+        elif ratio >= 1.0:
+            status = "feasible"
+            message = "Your plan is on track! The projected corpus meets your inflation-adjusted target based on your current inputs."
+        elif ratio >= 0.85:
             status = "borderline"
-            message = (
-                "You're close — a small increase in your monthly contribution "
-                "would get this goal fully on track."
-            )
+            message = "You're close — a small increase in your monthly contribution would get this goal fully on track."
+        elif ratio >= 0.5:
+            status = "at_risk"
+            message = "Your goal is currently At Risk because the inflation-adjusted target is significantly higher than the projected corpus under your current contribution."
         else:
-            status = "infeasible"
-            message = (
-                "This goal isn't on track with your current plan. "
-                "Increase your monthly SIP, extend your timeline, or reconsider the target amount."
-            )
+            status = "unlikely"
+            message = "Your goal is currently Unlikely to be met. The projected corpus is less than half of your target. Consider extending your timeline, adding a lumpsum, or increasing your SIP."
 
         return FeasibilityResult(
             status=status,
@@ -104,6 +102,7 @@ class FeasibilityEngine:
             projected_value=round(projected_value, 2),
             shortfall=round(shortfall, 2),
             suggested_monthly_sip=suggested_sip,
+            contribution_difference=round(contrib_diff, 2),
             suggested_extended_months=suggested_extended_months,
             message=message,
         )

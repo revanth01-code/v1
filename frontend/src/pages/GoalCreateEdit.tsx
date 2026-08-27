@@ -19,6 +19,7 @@ import {
   ArrowLeft,
   Check,
   Target,
+  Shield,
 } from 'lucide-react';
 import type { GoalCheckResponse } from '../types/api';
 
@@ -46,6 +47,31 @@ const goalSchema = z
       .min(0, 'Lumpsum amount cannot be negative'),
 
     risk_level: z.enum(['low', 'mid', 'high']),
+    
+    goal_type: z.enum([
+      'vacation',
+      'house',
+      'car',
+      'education',
+      'wedding',
+      'retirement',
+      'healthcare',
+      'custom',
+    ]),
+    
+    priority: z.enum(['low', 'medium', 'high']),
+    
+    deadline_flexibility: z.enum(['flexible', 'semi-flexible', 'inflexible']),
+    
+    importance: z.enum(['optional', 'important', 'mandatory']),
+    
+    inflation_scenario: z.enum(['conservative', 'expected', 'high']),
+    
+    inflation_rate_override: z
+      .number()
+      .min(0, 'Cannot be negative')
+      .nullable()
+      .optional(),
   })
   .refine(
     (data) => {
@@ -136,6 +162,12 @@ export const GoalCreateEdit: React.FC = () => {
       monthly_contribution: 15000,
       lumpsum_amount: 0,
       risk_level: 'mid',
+      goal_type: 'custom',
+      priority: 'medium',
+      deadline_flexibility: 'flexible',
+      importance: 'important',
+      inflation_scenario: 'expected',
+      inflation_rate_override: null,
     },
   });
 
@@ -143,7 +175,6 @@ export const GoalCreateEdit: React.FC = () => {
 
   // Run simulation query when inputs change
   useEffect(() => {
-    // Validate basics before querying simulator to avoid spamming network errors
     if (
       !formValues.name ||
       formValues.target_amount <= 0 ||
@@ -182,10 +213,15 @@ export const GoalCreateEdit: React.FC = () => {
           monthly_contribution: formValues.monthly_contribution,
           lumpsum_amount: formValues.lumpsum_amount,
           risk_level: formValues.risk_level,
+          goal_type: formValues.goal_type,
+          priority: formValues.priority,
+          deadline_flexibility: formValues.deadline_flexibility,
+          importance: formValues.importance,
+          inflation_scenario: formValues.inflation_scenario,
+          inflation_rate_override: formValues.inflation_rate_override || null,
         };
 
         const result = await goalsService.checkGoal(payload);
-
         setSimulationResult(result);
       } catch (err) {
         // Ignore simulator errors quietly
@@ -203,6 +239,12 @@ export const GoalCreateEdit: React.FC = () => {
     formValues.monthly_contribution,
     formValues.lumpsum_amount,
     formValues.risk_level,
+    formValues.goal_type,
+    formValues.priority,
+    formValues.deadline_flexibility,
+    formValues.importance,
+    formValues.inflation_scenario,
+    formValues.inflation_rate_override,
   ]);
 
   const saveMutation = useMutation({
@@ -217,7 +259,6 @@ export const GoalCreateEdit: React.FC = () => {
 
     onError: (err: any) => {
       if (err.status === 422 && err.feasibility) {
-        // Goal infeasible error carried inside custom layout
         setFeasibilityError(err.feasibility);
         setServerError(err.message);
       } else {
@@ -230,7 +271,13 @@ export const GoalCreateEdit: React.FC = () => {
     setServerError(null);
     setFeasibilityError(null);
 
-    saveMutation.mutate(data);
+    // Make sure nullable fields are correctly clean
+    const cleaned = {
+      ...data,
+      inflation_rate_override: data.inflation_rate_override || null,
+    };
+
+    saveMutation.mutate(cleaned);
   };
 
   const applySIPSuggestion = (amount: number) => {
@@ -239,11 +286,8 @@ export const GoalCreateEdit: React.FC = () => {
 
   const applyExtendedDateSuggestion = (months: number) => {
     const today = new Date();
-
     today.setMonth(today.getMonth() + months);
-
     const dateStr = today.toISOString().split('T')[0];
-
     setValue('target_date', dateStr);
   };
 
@@ -274,7 +318,6 @@ export const GoalCreateEdit: React.FC = () => {
               />
 
               <div className="form-row-2">
-                {/* ONLY CHANGED: Target Amount */}
                 <Controller
                   name="target_amount"
                   control={control}
@@ -314,7 +357,7 @@ export const GoalCreateEdit: React.FC = () => {
                     };
 
                     const isInvalid =
-                      field.value < 5000 || field.value > 1000000;
+                      field.value < 5000 || field.value > 10000000;
 
                     return (
                       <div className="form-group">
@@ -322,39 +365,27 @@ export const GoalCreateEdit: React.FC = () => {
                           Target Amount
                         </label>
 
-                        <div className="position-relative">
-                          <span
-                            className="position-absolute"
-                            style={{
-                              left: '14px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              zIndex: 1,
-                            }}
-                          >
-                            ₹
-                          </span>
-
+                        <div className="currency-input-wrapper">
+                          <span className="currency-symbol">₹</span>
                           <input
                             type="text"
                             inputMode="numeric"
                             className="form-control"
                             value={inputValue}
                             onChange={handleChange}
-                            style={{ paddingLeft: '32px' }}
                           />
                         </div>
 
                         <div className="d-flex justify-content-between text-secondary text-xs mt-1">
                           <span>Min ₹5,000</span>
-                          <span>Max ₹10,00,000</span>
+                          <span>Max ₹1,00,00,000</span>
                         </div>
 
                         {isInvalid && (
                           <div className="text-danger text-xs mt-1">
                             {field.value < 5000
                               ? 'Target amount must be at least ₹5,000'
-                              : 'Target amount cannot exceed ₹10,00,000'}
+                              : 'Target amount cannot exceed ₹1,00,00,000'}
                           </div>
                         )}
 
@@ -425,10 +456,8 @@ export const GoalCreateEdit: React.FC = () => {
                 </div>
               </div>
 
-              {/* Dynamic inputs based on mode */}
               <div className="form-row-2 mt-2">
                 {formValues.contribution_mode !== 'lumpsum' && (
-                  /* ONLY CHANGED: Monthly Contribution */
                   <Controller
                     name="monthly_contribution"
                     control={control}
@@ -472,46 +501,34 @@ export const GoalCreateEdit: React.FC = () => {
 
                       const isInvalid =
                         field.value < 0 ||
-                        field.value > 1000000;
+                        field.value > 10000000;
 
                       return (
                         <div className="form-group">
                           <label className="form-label">
-                            Monthly Contribution (₹)
+                            Monthly Contribution
                           </label>
 
-                          <div className="position-relative">
-                            <span
-                              className="position-absolute"
-                              style={{
-                                left: '14px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                zIndex: 1,
-                              }}
-                            >
-                              ₹
-                            </span>
-
+                          <div className="currency-input-wrapper">
+                            <span className="currency-symbol">₹</span>
                             <input
                               type="text"
                               inputMode="numeric"
                               className="form-control"
                               value={inputValue}
                               onChange={handleChange}
-                              style={{ paddingLeft: '32px' }}
                             />
                           </div>
 
                           <div className="d-flex justify-content-between text-secondary text-xs mt-1">
                             <span>Min ₹0</span>
-                            <span>Max ₹10,00,000</span>
+                            <span>Max ₹1,00,00,000</span>
                           </div>
 
                           {isInvalid && (
                             <div className="text-danger text-xs mt-1">
                               Monthly contribution cannot exceed
-                              ₹10,00,000
+                              ₹1,00,00,000
                             </div>
                           )}
 
@@ -526,7 +543,6 @@ export const GoalCreateEdit: React.FC = () => {
                   />
                 )}
 
-                {/* UNCHANGED: Lumpsum Amount */}
                 {formValues.contribution_mode !== 'sip' && (
                   <Controller
                     name="lumpsum_amount"
@@ -535,7 +551,7 @@ export const GoalCreateEdit: React.FC = () => {
                       <SliderField
                         label="Lumpsum Amount (₹)"
                         min={0}
-                        max={50000000}
+                        max={10000000}
                         step={10000}
                         value={field.value}
                         onChange={field.onChange}
@@ -547,6 +563,83 @@ export const GoalCreateEdit: React.FC = () => {
                 )}
               </div>
 
+              <hr className="divider-dark my-4" />
+              <h4 className="section-title mb-3 d-flex align-items-center">
+                <Shield size={16} className="me-2 text-primary" />
+                Goal Intelligence Settings
+              </h4>
+
+              <div className="form-row-2">
+                <div className="form-group">
+                  <label htmlFor="goal_type" className="form-label">Goal Category</label>
+                  <select id="goal_type" className="form-control" {...register('goal_type')}>
+                    <option value="custom">Custom (6% base inflation)</option>
+                    <option value="education">Education (8% base inflation)</option>
+                    <option value="house">Real Estate / House (6% base inflation)</option>
+                    <option value="healthcare">Healthcare (8% base inflation)</option>
+                    <option value="wedding">Wedding (7% base inflation)</option>
+                    <option value="car">Vehicle / Car (5% base inflation)</option>
+                    <option value="retirement">Retirement (6% base inflation)</option>
+                    <option value="vacation">Vacation / Travel (7% base inflation)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="priority" className="form-label">Goal Priority</label>
+                  <select id="priority" className="form-control" {...register('priority')}>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row-2 mt-2">
+                <div className="form-group">
+                  <label htmlFor="deadline_flexibility" className="form-label">Deadline Flexibility</label>
+                  <select id="deadline_flexibility" className="form-control" {...register('deadline_flexibility')}>
+                    <option value="flexible">Flexible (+/- 12 months)</option>
+                    <option value="semi-flexible">Semi-Flexible (+/- 6 months)</option>
+                    <option value="inflexible">Inflexible (Fixed Target Date)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="importance" className="form-label">Goal Importance</label>
+                  <select id="importance" className="form-control" {...register('importance')}>
+                    <option value="optional">Optional / Luxury</option>
+                    <option value="important">Important / Standard</option>
+                    <option value="mandatory">Mandatory / Critical</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row-2 mt-2">
+                <div className="form-group">
+                  <label htmlFor="inflation_scenario" className="form-label">Inflation Scenario</label>
+                  <select id="inflation_scenario" className="form-control" {...register('inflation_scenario')}>
+                    <option value="expected">Expected Scenario (Base)</option>
+                    <option value="conservative">Conservative Scenario (Base - 2%)</option>
+                    <option value="high">High Inflation Scenario (Base + 2%)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="inflation_rate_override" className="form-label">Inflation Override (% p.a.)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    id="inflation_rate_override"
+                    placeholder="Leave empty to use scenario defaults"
+                    className="form-control"
+                    {...register('inflation_rate_override', { valueAsNumber: true })}
+                  />
+                  {errors.inflation_rate_override?.message && (
+                    <p className="form-error-text mt-1">{errors.inflation_rate_override.message}</p>
+                  )}
+                </div>
+              </div>
+
               {serverError && (
                 <div className="alert alert-danger mt-3">
                   <AlertCircle size={16} className="me-2" />
@@ -556,31 +649,31 @@ export const GoalCreateEdit: React.FC = () => {
 
               {feasibilityError && (
                 <div className="suggestions-container mt-3 card p-3 border-danger-subtle bg-danger-subtle">
-                  <h4 className="text-danger d-flex align-items-center">
+                  <h4 className="text-danger d-flex align-items-center text-sm font-semibold">
                     <AlertTriangle size={16} className="me-2" />
-                    How to fix your plan:
+                    How to fix your plan (Capacity Recommendations):
                   </h4>
+                  <p className="text-secondary text-xs mt-1">
+                    Your current monthly SIP of {formatINR(formValues.monthly_contribution)} fails to meet the target cost.
+                  </p>
 
                   <div className="suggestion-action-rows mt-2">
                     {feasibilityError.suggested_monthly_sip && (
-                      <div className="suggestion-row">
-                        <p>
+                      <div className="suggestion-row d-flex justify-content-between align-items-center bg-surface-dark-subtle p-2 rounded">
+                        <p className="m-0 text-xs text-secondary">
                           Increase monthly contribution to:{' '}
-                          <strong>
-                            {formatINR(
-                              feasibilityError.suggested_monthly_sip
-                            )}
+                          <strong className="text-primary text-sm font-bold block mt-1">
+                            {formatINR(feasibilityError.suggested_monthly_sip)}
                           </strong>
+                          <span className="text-secondary text-2xs block mt-1">
+                            Difference: +{formatINR(feasibilityError.contribution_difference || 0)} / mo
+                          </span>
                         </p>
 
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
-                          onClick={() =>
-                            applySIPSuggestion(
-                              feasibilityError.suggested_monthly_sip
-                            )
-                          }
+                          onClick={() => applySIPSuggestion(feasibilityError.suggested_monthly_sip)}
                         >
                           Apply suggestion
                         </button>
@@ -588,25 +681,18 @@ export const GoalCreateEdit: React.FC = () => {
                     )}
 
                     {feasibilityError.suggested_extended_months && (
-                      <div className="suggestion-row mt-2">
-                        <p>
+                      <div className="suggestion-row mt-2 d-flex justify-content-between align-items-center bg-surface-dark-subtle p-2 rounded">
+                        <p className="m-0 text-xs text-secondary">
                           Extend timeline to{' '}
-                          <strong>
-                            {
-                              feasibilityError.suggested_extended_months
-                            }{' '}
-                            months
+                          <strong className="text-primary text-sm font-bold block mt-1">
+                            {feasibilityError.suggested_extended_months} months
                           </strong>
                         </p>
 
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
-                          onClick={() =>
-                            applyExtendedDateSuggestion(
-                              feasibilityError.suggested_extended_months
-                            )
-                          }
+                          onClick={() => applyExtendedDateSuggestion(feasibilityError.suggested_extended_months)}
                         >
                           Apply suggestion
                         </button>
@@ -620,7 +706,7 @@ export const GoalCreateEdit: React.FC = () => {
                 <Button
                   type="submit"
                   variant="primary"
-                  className="w-100"
+                  className="w-100 font-semibold"
                   isLoading={saveMutation.isPending}
                 >
                   Save & Lock Goal
@@ -657,10 +743,7 @@ export const GoalCreateEdit: React.FC = () => {
 
                 <div className="detail-rows">
                   <div className="detail-row">
-                    <span className="text-secondary">
-                      Assumed annual return
-                    </span>
-
+                    <span className="text-secondary">Assumed annual return</span>
                     <span className="font-semibold text-primary">
                       {formValues.risk_level === 'low'
                         ? '7.0%'
@@ -673,34 +756,36 @@ export const GoalCreateEdit: React.FC = () => {
 
                   <div className="detail-row">
                     <span className="text-secondary">Duration</span>
-
                     <span className="font-semibold text-primary">
                       {simulationResult.feasibility.months} months
                     </span>
                   </div>
 
                   <div className="detail-row">
-                    <span className="text-secondary">
-                      Target inflated cost
+                    <span className="text-secondary font-semibold">Target Cost (Current)</span>
+                    <span className="font-semibold text-secondary">
+                      {formatINR(formValues.target_amount)}
                     </span>
+                  </div>
 
-                    <span className="font-semibold text-primary">
-                      {formatINR(
-                        simulationResult.feasibility
-                          .inflation_adjusted_target
-                      )}
+                  <div className="detail-row border-primary-dark pt-2 mt-2">
+                    <span className="text-primary font-bold">Inflation-Adjusted Target</span>
+                    <span className="font-bold text-primary">
+                      {formatINR(simulationResult.feasibility.inflation_adjusted_target)}
+                    </span>
+                  </div>
+
+                  <div className="detail-row bg-surface-dark-only p-2 rounded-lg mt-1 mb-2">
+                    <span className="text-secondary text-xs">Inflation Impact (Currency)</span>
+                    <span className="font-semibold text-danger text-xs">
+                      +{formatINR(simulationResult.feasibility.inflation_adjusted_target - formValues.target_amount)}
                     </span>
                   </div>
 
                   <div className="detail-row">
-                    <span className="text-secondary">
-                      Projected value
-                    </span>
-
-                    <span className="font-semibold text-primary text-accent">
-                      {formatINR(
-                        simulationResult.feasibility.projected_value
-                      )}
+                    <span className="text-secondary">Projected value</span>
+                    <span className="font-semibold text-accent">
+                      {formatINR(simulationResult.feasibility.projected_value)}
                     </span>
                   </div>
                 </div>
@@ -713,61 +798,105 @@ export const GoalCreateEdit: React.FC = () => {
                         size={16}
                         className="me-2 flex-shrink-0"
                       />
-
                       <p className="text-xs m-0">
                         {simulationResult.guardrail.warning}
                       </p>
                     </div>
                   )}
 
-                {simulationResult.feasibility.status ===
-                  'infeasible' && (
-                    <div className="shortfall-info mt-3 text-danger">
-                      <p className="text-sm m-0">
-                        Shortfall:{' '}
+                {/* Feasibility Alert Message */}
+                {['unlikely', 'at_risk'].includes(simulationResult.feasibility.status) && (
+                  <div className="shortfall-info mt-3 alert alert-danger bg-danger-subtle border-danger-subtle">
+                    <div className="d-flex align-items-center">
+                      <AlertCircle size={16} className="me-2 flex-shrink-0" />
+                      <p className="text-sm m-0 font-semibold">
+                        Funding Gap:{' '}
                         <strong>
-                          {formatINR(
-                            simulationResult.feasibility.shortfall || 0
-                          )}
+                          {formatINR(simulationResult.feasibility.shortfall || 0)}
                         </strong>
                       </p>
-
-                      {simulationResult.feasibility.message && (
-                        <p className="text-xs text-secondary mt-1">
-                          {simulationResult.feasibility.message}
-                        </p>
-                      )}
                     </div>
-                  )}
-
-                {simulationResult.feasibility.status ===
-                  'borderline' && (
-                    <div className="shortfall-info mt-3 text-warning">
-                      <p className="text-xs text-secondary m-0">
+                    {simulationResult.feasibility.message && (
+                      <p className="text-xs mt-2 m-0 text-secondary">
                         {simulationResult.feasibility.message}
                       </p>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                )}
 
-                {simulationResult.feasibility.status ===
-                  'feasible' && (
-                    <div className="alert alert-success mt-3 bg-success-subtle text-success d-flex align-items-center">
-                      <Check size={16} className="me-2" />
-
-                      <span className="text-xs">
-                        Your plan covers the inflation adjusted target!
-                        Ready to save.
-                      </span>
+                {simulationResult.feasibility.status === 'borderline' && (
+                  <div className="shortfall-info mt-3 alert alert-warning bg-warning-subtle border-warning-subtle">
+                    <div className="d-flex align-items-center">
+                      <AlertCircle size={16} className="me-2 flex-shrink-0 text-warning" />
+                      <p className="text-sm m-0 text-warning font-semibold">
+                        Funding Gap: {formatINR(simulationResult.feasibility.shortfall || 0)}
+                      </p>
                     </div>
-                  )}
+                    <p className="text-xs text-secondary mt-2 m-0">
+                      {simulationResult.feasibility.message}
+                    </p>
+                  </div>
+                )}
+
+                {['feasible', 'highly_feasible'].includes(simulationResult.feasibility.status) && (
+                  <div className="alert alert-success mt-3 bg-success-subtle text-success d-flex align-items-center">
+                    <Check size={16} className="me-2" />
+                    <span className="text-xs font-semibold">
+                      {simulationResult.feasibility.message || 'Your plan covers the inflation-adjusted target cost! Ready to lock.'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Risk Engine Strategy Options rendering */}
+                {simulationResult.strategies && (
+                  <div className="strategies-preview mt-4">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-secondary mb-2 d-flex align-items-center">
+                      <Shield size={14} className="me-1 text-primary" />
+                      Risk Engine Strategy Projections
+                    </h4>
+                    <div className="strategy-cards d-flex flex-column gap-2">
+                      {Object.entries(simulationResult.strategies).map(([name, s]: [string, any]) => {
+                        const isCurrentSelected = name === (
+                          formValues.risk_level === 'low' ? 'conservative' : (
+                            formValues.risk_level === 'mid' ? 'moderate' : 'aggressive'
+                          )
+                        );
+                        
+                        return (
+                          <div 
+                            key={name} 
+                            className={`strategy-card p-3 rounded-lg border bg-surface-dark-only ${isCurrentSelected ? 'border-primary' : 'border-dark'}`}
+                          >
+                            <div className="d-flex justify-content-between align-items-center">
+                              <span className="text-xs font-bold capitalize text-primary">
+                                {name} {isCurrentSelected && '(Selected)'}
+                              </span>
+                              <span className="text-xs font-semibold bg-primary-dark-subtle text-primary px-2 py-0.5 rounded">
+                                {s.equity_pct}% Eq / {s.debt_pct}% Dt
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 mt-2 text-2xs text-secondary">
+                              <div>
+                                <span className="block text-secondary text-2xs">Volatility: {s.volatility}</span>
+                                <span className="block text-secondary text-2xs">Liquidity: {s.liquidity}</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="block text-secondary text-2xs">Return: {s.expected_return_range}</span>
+                                <span className="block text-primary text-2xs font-bold">Goal Success Prob: {s.success_probability}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="sim-empty-state text-center p-4">
                 <Target size={40} className="text-secondary mb-2" />
-
                 <p className="text-secondary text-sm">
-                  Fill in a goal name and target parameters to generate
-                  live projections.
+                  Fill in a goal name and target parameters to generate live projections.
                 </p>
               </div>
             )}

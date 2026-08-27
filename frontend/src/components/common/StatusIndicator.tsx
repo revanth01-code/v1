@@ -1,7 +1,7 @@
 /* frontend/src/components/common/StatusIndicator.tsx */
 import React from 'react';
 
-type StatusType = 'feasible' | 'borderline' | 'infeasible' | 'building' | 'complete' | string;
+type StatusType = 'highly_feasible' | 'feasible' | 'borderline' | 'at_risk' | 'unlikely' | 'infeasible' | 'building' | 'complete' | string;
 
 interface StatusIndicatorProps {
   status: StatusType;
@@ -19,15 +19,21 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   let className = 'status-pill';
   let displayLabel = label || status;
   
-  if (normStatus === 'feasible' || normStatus === 'complete') {
+  if (normStatus === 'highly_feasible') {
+    className += ' status-success border border-success-subtle';
+    displayLabel = label || 'Highly Feasible';
+  } else if (normStatus === 'feasible' || normStatus === 'complete') {
     className += ' status-success';
     displayLabel = label || (normStatus === 'feasible' ? 'Feasible' : 'Complete');
   } else if (normStatus === 'borderline') {
     className += ' status-warning';
     displayLabel = label || 'Borderline';
-  } else if (normStatus === 'infeasible') {
+  } else if (normStatus === 'at_risk') {
+    className += ' status-warning border border-danger-subtle';
+    displayLabel = label || 'At Risk';
+  } else if (normStatus === 'unlikely' || normStatus === 'infeasible') {
     className += ' status-danger';
-    displayLabel = label || 'Infeasible';
+    displayLabel = label || (normStatus === 'unlikely' ? 'Unlikely' : 'Infeasible');
   } else if (normStatus === 'building') {
     className += ' status-info';
     displayLabel = label || 'Building';

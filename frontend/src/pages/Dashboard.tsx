@@ -1,3 +1,4 @@
+/* frontend/src/pages/Dashboard.tsx */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -15,11 +16,11 @@ import {
   Plus, 
   TrendingUp, 
   MessageSquare,
-  AlertCircle
+  AlertCircle,
+  PiggyBank
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
-
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => dashboardService.getSummary(),
@@ -55,7 +56,7 @@ export const Dashboard: React.FC = () => {
 
   if (!data) return null;
 
-  const { goals, retirement, emergency_fund } = data;
+  const { goals, retirement, emergency_fund, available_capacity, total_required_sip, alerts } = data;
 
   return (
     <div className="dashboard-page-container">
@@ -69,6 +70,43 @@ export const Dashboard: React.FC = () => {
           <Plus size={16} />
           <span>New Goal</span>
         </Link>
+      </div>
+
+      {/* Multi-Goal Capacity Alerts */}
+      {alerts && alerts.length > 0 && (
+        <div className="alert alert-warning mb-4 p-3 bg-warning-subtle text-warning border-warning-subtle rounded-lg">
+          <h4 className="text-sm font-bold d-flex align-items-center mb-2">
+            <ShieldAlert size={18} className="me-2" />
+            Multi-Goal Capacity Alerts
+          </h4>
+          <ul className="m-0 pl-4 text-xs text-secondary d-flex flex-column gap-1">
+            {alerts.map((alert, i) => (
+              <li key={i}>{alert}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Capacity Metrics Highlight Card */}
+      <div className="capacity-highlight-card">
+        <div className="capacity-item">
+          <div className="capacity-icon">
+            <PiggyBank size={24} />
+          </div>
+          <div>
+            <div className="capacity-label">Available Monthly Capacity</div>
+            <div className="capacity-value">{formatINR(available_capacity)}</div>
+          </div>
+        </div>
+        <div className="capacity-item capacity-divider-border">
+          <div className="capacity-icon" style={{ backgroundColor: 'var(--accent-color-light)', color: 'var(--accent-color)' }}>
+            <TrendingUp size={24} />
+          </div>
+          <div>
+            <div className="capacity-label">Total Required SIP Contributions</div>
+            <div className="capacity-value">{formatINR(total_required_sip)}</div>
+          </div>
+        </div>
       </div>
 
       <div className="dashboard-grid-3">

@@ -25,9 +25,11 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, title = 'Goal-B
       </div>
       
       <div className="header-right">
-        <div className="header-user-display">
-          <span className="header-user-greeting">Welcome,</span>
-          <span className="header-user-email">{user?.email}</span>
+        <div className="header-user-display" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+          <div className="user-avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--accent-color-light)', color: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.875rem' }}>
+            {user?.email ? user.email[0].toUpperCase() : 'U'}
+          </div>
+          <span className="header-user-email" style={{ fontWeight: 600 }}>{user?.email}</span>
         </div>
       </div>
     </header>

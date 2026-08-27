@@ -23,6 +23,9 @@ from app.modules.funds.router import router as funds_router
 from app.modules.goals.router import router as goals_router
 from app.modules.profile.router import router as profile_router
 from app.modules.retirement.router import router as retirement_router
+from app.modules.simulation.router import router as simulation_router
+from app.modules.universe.router import router as universe_router
+from app.modules.portfolio.router import router as portfolio_router
 
 if settings.SENTRY_DSN:
     sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=0.1, environment=settings.ENV)
@@ -66,6 +69,9 @@ def create_app() -> FastAPI:
     app.include_router(funds_router, prefix=API_PREFIX)
     app.include_router(chatbot_router, prefix=API_PREFIX)
     app.include_router(dashboard_router, prefix=API_PREFIX)
+    app.include_router(simulation_router, prefix=API_PREFIX)
+    app.include_router(universe_router, prefix=API_PREFIX)
+    app.include_router(portfolio_router, prefix=API_PREFIX)
 
     return app
 

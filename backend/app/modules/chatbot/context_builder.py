@@ -28,6 +28,11 @@ def build_user_context(access_token: str, user_id: str) -> dict:
             "existing_investments": profile.existing_investments,
             "dependents": profile.dependents,
             "employment_type": profile.employment_type,
+            "essential_expenses": profile.essential_expenses,
+            "emi_obligations": profile.emi_obligations,
+            "mandatory_commitments": profile.mandatory_commitments,
+            "emergency_fund_contribution": profile.emergency_fund_contribution,
+            "available_capacity": profile.available_capacity,
         }
     except AppError:
         context["profile"] = None
@@ -42,6 +47,13 @@ def build_user_context(access_token: str, user_id: str) -> dict:
                 "risk_level": g.risk_level,
                 "feasibility_status": g.feasibility_status,
                 "monthly_contribution": g.monthly_contribution,
+                "lumpsum_amount": g.lumpsum_amount,
+                "goal_type": g.goal_type,
+                "priority": g.priority,
+                "deadline_flexibility": g.deadline_flexibility,
+                "importance": g.importance,
+                "inflation_scenario": g.inflation_scenario,
+                "inflation_rate_pct": g.inflation_rate_pct,
             }
             for g in goals
         ]

@@ -25,7 +25,7 @@ DEFAULT_PRE_RETIREMENT_RETURN_PCT = 11.0
 DEFAULT_POST_RETIREMENT_RETURN_PCT = 7.0
 # DEFAULT_INFLATION_PCT already exists from Module 4 — reused here too
 
-AMFI_NAV_URL = "https://www.amfiindia.com/spages/NAVAll.txt"
+AMFI_NAV_URL = "https://portal.amfiindia.com/spages/NAVAll.txt"
 MFAPI_BASE_URL = "https://api.mfapi.in/mf"
 
 FUND_CATEGORIES = ["largecap", "flexicap", "midcap", "debt"]

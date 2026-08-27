@@ -29,6 +29,10 @@ export interface ProfileCreate {
   existing_investments: number;
   dependents: number;
   employment_type?: string | null;
+  essential_expenses?: number;
+  emi_obligations?: number;
+  mandatory_commitments?: number;
+  emergency_fund_contribution?: number;
 }
 
 export interface ProfileUpdate {
@@ -38,6 +42,10 @@ export interface ProfileUpdate {
   existing_investments?: number;
   dependents?: number;
   employment_type?: string | null;
+  essential_expenses?: number;
+  emi_obligations?: number;
+  mandatory_commitments?: number;
+  emergency_fund_contribution?: number;
 }
 
 export interface ProfileOut {
@@ -49,6 +57,11 @@ export interface ProfileOut {
   existing_investments: number;
   dependents: number;
   employment_type: string | null;
+  essential_expenses: number;
+  emi_obligations: number;
+  mandatory_commitments: number;
+  emergency_fund_contribution: number;
+  available_capacity: number;
   monthly_surplus: number;
   created_at: string;
   updated_at: string;
@@ -57,7 +70,7 @@ export interface ProfileOut {
 export type ContributionMode = 'sip' | 'lumpsum' | 'both';
 export type RiskLevel = 'low' | 'mid' | 'high';
 export type TermType = 'short_term' | 'long_term';
-export type FeasibilityStatus = 'feasible' | 'borderline' | 'infeasible';
+export type FeasibilityStatus = 'highly_feasible' | 'feasible' | 'borderline' | 'at_risk' | 'unlikely';
 
 export interface GoalCreate {
   name: string;
@@ -67,6 +80,12 @@ export interface GoalCreate {
   monthly_contribution: number;
   lumpsum_amount: number;
   risk_level: RiskLevel;
+  goal_type: string;
+  priority: string;
+  deadline_flexibility: string;
+  importance: string;
+  inflation_scenario: string;
+  inflation_rate_override?: number | null;
 }
 
 export interface GuardrailResult {
@@ -81,14 +100,27 @@ export interface FeasibilityResult {
   projected_value: number;
   shortfall: number | null;
   suggested_monthly_sip: number | null;
+  contribution_difference: number;
   suggested_extended_months: number | null;
   message: string | null;
+}
+
+export interface GoalStrategy {
+  risk_level: string;
+  equity_pct: number;
+  debt_pct: number;
+  expected_return_range: string;
+  expected_return_pct: number;
+  volatility: string;
+  liquidity: string;
+  success_probability: number;
 }
 
 export interface GoalCheckResponse {
   term_type: TermType;
   guardrail: GuardrailResult;
   feasibility: FeasibilityResult;
+  strategies: Record<string, GoalStrategy> | null;
 }
 
 export interface FundOut {
@@ -119,6 +151,15 @@ export interface GoalOut {
   created_at: string;
   updated_at: string;
   recommended_funds: Record<string, FundOut[]>;
+  goal_type: string;
+  priority: string;
+  deadline_flexibility: string;
+  importance: string;
+  inflation_scenario: string;
+  inflation_rate_pct: number;
+  inflation_rate_override: number | null;
+  strategies: Record<string, GoalStrategy> | null;
+  priority_rank: number | null;
 }
 
 export interface EmergencyFundCreate {
@@ -245,4 +286,61 @@ export interface DashboardOut {
   goals: GoalsOverview;
   retirement: RetirementOverview | null;
   emergency_fund: EmergencyFundOverview | null;
+  available_capacity: number;
+  total_required_sip: number;
+  alerts: string[];
+}
+
+export interface SimulationInput {
+  lumpsum_amount: number;
+  monthly_contribution: number;
+  target_amount: number;
+  target_date: string;
+  risk_level: 'low' | 'mid' | 'high' | 'custom';
+  equity_pct?: number;
+  debt_pct?: number;
+  inflation_pct: number;
+  stress_scenario: 'none' | 'market_downturn' | 'high_inflation' | 'low_return' | 'sip_pause' | 'reduced_income' | 'increased_cost';
+  sip_pause_start: number;
+  sip_pause_duration: number;
+  sip_reduce_pct: number;
+  sip_reduce_start: number;
+  sip_reduce_duration: number;
+}
+
+export interface SimulationResult {
+  median_corpus: number;
+  mean_corpus: number;
+  downside_percentile_10: number;
+  upside_percentile_90: number;
+  prob_success: number;
+  prob_shortfall: number;
+  median_shortfall: number;
+  expected_shortfall: number;
+  purchasing_power_median: number;
+  adjusted_target: number;
+  message: string;
+}
+
+export interface WhatIfComparisonResponse {
+  current_plan: SimulationResult;
+  what_if_plan: SimulationResult;
+}
+
+export interface AssetOut {
+  id: string;
+  asset_name: string;
+  asset_class: string;
+  subcategory: string;
+  instrument_type: string;
+  identifier: string;
+  data_source: string;
+  liquidity: string;
+  tax_classification: string;
+  tax_rule_key?: string | null;
+  tax_metadata?: Record<string, any>;
+  latest_price: number | null;
+  data_status: 'fresh' | 'recent' | 'aging' | 'stale' | 'unavailable';
+  last_fetched: string | null;
+  last_updated: string;
 }

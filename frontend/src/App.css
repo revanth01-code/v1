@@ -243,26 +243,27 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.625rem 0.875rem;
   border-radius: var(--border-radius-sm);
   color: var(--text-muted-light);
   font-size: 0.875rem;
   font-weight: 500;
-  transition: all var(--transition-speed);
+  transition: all var(--transition-speed) ease;
 }
 
 .sidebar-link:hover {
   color: var(--text-light);
-  background-color: hsl(220, 15%, 23%);
+  background-color: hsl(220, 20%, 18%);
 }
 
 .sidebar-link-active {
   color: var(--text-light);
   background-color: var(--accent-color);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-link-active:hover {
-  background-color: var(--accent-color);
+  background-color: var(--accent-color-hover);
 }
 
 .link-icon {
@@ -393,9 +394,10 @@
 }
 
 .header-page-title {
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.025em;
   display: none;
 }
 

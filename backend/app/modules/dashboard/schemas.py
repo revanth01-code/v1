@@ -34,3 +34,6 @@ class DashboardOut(BaseModel):
     goals: GoalsOverview
     retirement: Optional[RetirementOverview] = None
     emergency_fund: Optional[EmergencyFundOverview] = None
+    available_capacity: float = 0.0
+    total_required_sip: float = 0.0
+    alerts: list[str] = []

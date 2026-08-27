@@ -82,7 +82,7 @@ class TestCreate:
                 json={"current_age": 30, "retirement_age": 60, "planned_monthly_contribution": 500},
             )
         assert res.status_code == 201  # created despite being infeasible
-        assert res.json()["feasibility_status"] == "infeasible"
+        assert res.json()["feasibility_status"] == "unlikely"
 
     def test_rejects_retirement_age_before_current_age(self):
         res = client.post(
@@ -136,7 +136,7 @@ class TestGet:
              patch("app.modules.profile.repository.ProfileRepository.get_by_user_id", return_value=FAKE_PROFILE):
             high_res = client.get("/api/v1/retirement")
 
-        status_rank = {"infeasible": 0, "borderline": 1, "feasible": 2}
+        status_rank = {"unlikely": 0, "at_risk": 1, "borderline": 2, "feasible": 3, "highly_feasible": 4}
         assert status_rank[high_res.json()["feasibility_status"]] >= status_rank[low_res.json()["feasibility_status"]]
 
 

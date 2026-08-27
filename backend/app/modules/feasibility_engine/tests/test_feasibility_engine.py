@@ -21,8 +21,8 @@ def make_input(**overrides):
 class TestFeasible:
     def test_well_funded_goal_is_feasible(self):
         result = FeasibilityEngine.check(make_input(monthly_contribution=20000))
-        assert result.status == "feasible"
-        assert result.shortfall is None
+        assert result.status == "highly_feasible"
+        assert result.shortfall == 0.0
 
     def test_lumpsum_only_can_be_feasible(self):
         result = FeasibilityEngine.check(
@@ -54,14 +54,14 @@ class TestBorderline:
 class TestInfeasible:
     def test_tiny_contribution_is_infeasible(self):
         result = FeasibilityEngine.check(make_input(monthly_contribution=500))
-        assert result.status == "infeasible"
+        assert result.status == "unlikely"
         assert result.shortfall > 0
         assert result.suggested_monthly_sip is not None
         assert result.suggested_monthly_sip > 500
 
     def test_infeasible_suggests_extended_duration(self):
         result = FeasibilityEngine.check(make_input(monthly_contribution=1000))
-        assert result.status == "infeasible"
+        assert result.status == "unlikely"
         assert result.suggested_extended_months is not None
         assert result.suggested_extended_months > result.months
 
@@ -69,7 +69,7 @@ class TestInfeasible:
         result = FeasibilityEngine.check(
             make_input(monthly_contribution=0, lumpsum_amount=0)
         )
-        assert result.status == "infeasible"
+        assert result.status == "unlikely"
         assert result.suggested_extended_months is None
 
 

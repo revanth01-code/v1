@@ -61,6 +61,16 @@ export const GoalsList: React.FC = () => {
             <Card key={goal.id} className="goal-list-card">
               <div className="goal-card-header">
                 <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem' }}>
+                    {goal.priority_rank !== null && (
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, backgroundColor: 'var(--accent-color-light)', color: 'var(--accent-color)', padding: '0.1875rem 0.5rem', borderRadius: '4px' }}>
+                        Rank #{goal.priority_rank}
+                      </span>
+                    )}
+                    <span style={{ fontSize: '0.7rem', fontWeight: 600, backgroundColor: 'hsl(220, 12%, 93%)', color: 'var(--text-secondary)', padding: '0.1875rem 0.5rem', borderRadius: '4px', textTransform: 'capitalize' }}>
+                      {goal.priority} Priority
+                    </span>
+                  </div>
                   <h3 className="goal-card-name">{goal.name}</h3>
                   <span className="text-secondary text-xs">Risk level: {goal.risk_level.toUpperCase()}</span>
                 </div>

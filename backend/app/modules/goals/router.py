@@ -3,6 +3,8 @@ from app.middleware.auth import get_current_user, get_access_token
 from app.modules.auth.schemas import UserOut
 from .schemas import GoalCheckResponse, GoalCreate, GoalOut
 from .service import GoalService
+from .priority_schemas import PriorityRankIn, PriorityAnalysisOut
+from .priority_service import PriorityService
 
 router = APIRouter(prefix="/goals", tags=["goals"])
 
@@ -30,6 +32,23 @@ def list_goals(
     token: str = Depends(get_access_token),
 ):
     return GoalService.list_goals(token, user.id, limit=limit, offset=offset)
+
+
+@router.put("/priority", response_model=list[GoalOut])
+def set_priority_ranks(
+    payload: PriorityRankIn,
+    user: UserOut = Depends(get_current_user),
+    token: str = Depends(get_access_token),
+):
+    return PriorityService.set_priority_ranks(token, user.id, payload)
+
+
+@router.get("/priority-analysis", response_model=PriorityAnalysisOut)
+def get_priority_analysis(
+    user: UserOut = Depends(get_current_user),
+    token: str = Depends(get_access_token),
+):
+    return PriorityService.get_priority_analysis(token, user.id)
 
 
 @router.get("/{goal_id}", response_model=GoalOut)

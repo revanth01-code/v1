@@ -263,17 +263,17 @@ export const RetirementPlan: React.FC = () => {
                   </span>
                 </div>
 
-                {plan.feasibility_details.status === 'infeasible' && (
-                  <div className="detail-row text-danger font-semibold">
-                    <span>Estimated Shortfall</span>
-                    <span>{formatINR(plan.feasibility_details.shortfall || 0)}</span>
-                  </div>
-                )}
-              </div>
-
-              {plan.feasibility_details.status === 'infeasible' && (
-                <div className="suggestions-container mt-4 card p-3 border-danger-subtle bg-danger-subtle">
-                  <h4 className="text-danger m-0 text-sm">Recommendations to close shortfall:</h4>
+                {['unlikely', 'at_risk'].includes(plan.feasibility_details.status) && (
+                   <div className="detail-row text-danger font-semibold">
+                     <span>Estimated Shortfall</span>
+                     <span>{formatINR(plan.feasibility_details.shortfall || 0)}</span>
+                   </div>
+                 )}
+               </div>
+ 
+               {['unlikely', 'at_risk'].includes(plan.feasibility_details.status) && (
+                 <div className="suggestions-container mt-4 card p-3 border-danger-subtle bg-danger-subtle">
+                   <h4 className="text-danger m-0 text-sm">Recommendations to close shortfall:</h4>
                   <ul className="mt-2 text-xs text-secondary pl-4">
                     {plan.feasibility_details.suggested_monthly_sip && (
                       <li className="mb-1">

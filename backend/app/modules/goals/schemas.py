@@ -12,6 +12,13 @@ class GoalCreate(BaseModel):
     monthly_contribution: float = Field(ge=0, default=0)
     lumpsum_amount: float = Field(ge=0, default=0)
     risk_level: Literal["low", "mid", "high"]
+    goal_type: Literal["vacation", "house", "car", "education", "wedding", "retirement", "healthcare", "custom"] = "custom"
+    priority: Literal["low", "medium", "high"] = "medium"
+    deadline_flexibility: Literal["flexible", "semi-flexible", "inflexible"] = "flexible"
+    importance: Literal["optional", "important", "mandatory"] = "important"
+    inflation_scenario: Literal["conservative", "expected", "high"] = "expected"
+    inflation_rate_override: Optional[float] = Field(default=None, ge=0)
+    priority_rank: Optional[int] = Field(default=None, ge=1, description="Optional 1-based user defined priority rank")
 
     @model_validator(mode="after")
     def check_contribution_matches_mode(self):
@@ -33,6 +40,7 @@ class GoalCheckResponse(BaseModel):
     term_type: Literal["short_term", "long_term"]
     guardrail: GuardrailResult
     feasibility: dict  # FeasibilityResult, kept loose here to avoid a circular import
+    strategies: Optional[dict] = None
 
 
 class GoalOut(BaseModel):
@@ -54,4 +62,13 @@ class GoalOut(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
+    goal_type: str = "custom"
+    priority: str = "medium"
+    deadline_flexibility: str = "flexible"
+    importance: str = "important"
+    inflation_scenario: str = "expected"
+    inflation_rate_pct: float = 6.0
+    inflation_rate_override: Optional[float] = None
+    priority_rank: Optional[int] = None
+    strategies: Optional[dict] = None
     recommended_funds: dict[str, list[FundOut]] = Field(default_factory=dict)

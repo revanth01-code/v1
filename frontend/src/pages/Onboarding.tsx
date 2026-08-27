@@ -20,6 +20,10 @@ const profileSchema = z.object({
   existing_investments: z.number({ message: 'Existing investments is required' }).min(0, 'Must be positive'),
   dependents: z.number({ message: 'Number of dependents is required' }).int().min(0, 'Must be positive'),
   employment_type: z.string().min(1, 'Employment type is required'),
+  essential_expenses: z.number().min(0, 'Must be positive'),
+  emi_obligations: z.number().min(0, 'Must be positive'),
+  mandatory_commitments: z.number().min(0, 'Must be positive'),
+  emergency_fund_contribution: z.number().min(0, 'Must be positive'),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -50,6 +54,10 @@ export const Onboarding: React.FC = () => {
       existing_investments: 0,
       dependents: 0,
       employment_type: 'Salaried',
+      essential_expenses: 0,
+      emi_obligations: 0,
+      mandatory_commitments: 0,
+      emergency_fund_contribution: 0,
     },
   });
 
@@ -100,6 +108,8 @@ export const Onboarding: React.FC = () => {
         {serverError && <div className="alert alert-danger">{serverError}</div>}
 
         <form onSubmit={handleSubmit(onSubmit)} className="onboarding-form">
+          <h4 className="section-title mb-3">Core Income & Asset Metrics</h4>
+          
           <div className="form-row-2">
             <InputField
               label="Monthly Income (₹)"
@@ -174,6 +184,53 @@ export const Onboarding: React.FC = () => {
                 <p className="form-error-text">{errors.employment_type.message}</p>
               )}
             </div>
+          </div>
+
+          <hr className="divider-dark my-4" />
+          <h4 className="section-title mb-3">Capacity Engine Allocations (Monthly)</h4>
+
+          <div className="form-row-2">
+            <InputField
+              label="Essential Expenses (Rent, Bills, Food) (₹)"
+              type="number"
+              id="essential_expenses"
+              placeholder="0"
+              error={errors.essential_expenses?.message}
+              disabled={submitting}
+              {...register('essential_expenses', { valueAsNumber: true })}
+            />
+
+            <InputField
+              label="EMI & Debt Obligations (₹)"
+              type="number"
+              id="emi_obligations"
+              placeholder="0"
+              error={errors.emi_obligations?.message}
+              disabled={submitting}
+              {...register('emi_obligations', { valueAsNumber: true })}
+            />
+          </div>
+
+          <div className="form-row-2">
+            <InputField
+              label="Mandatory Commitments (Insurance, Fees) (₹)"
+              type="number"
+              id="mandatory_commitments"
+              placeholder="0"
+              error={errors.mandatory_commitments?.message}
+              disabled={submitting}
+              {...register('mandatory_commitments', { valueAsNumber: true })}
+            />
+
+            <InputField
+              label="Emergency Fund Monthly Contribution (₹)"
+              type="number"
+              id="emergency_fund_contribution"
+              placeholder="0"
+              error={errors.emergency_fund_contribution?.message}
+              disabled={submitting}
+              {...register('emergency_fund_contribution', { valueAsNumber: true })}
+            />
           </div>
 
           <div className="onboarding-actions">

@@ -18,6 +18,10 @@ const profileUpdateSchema = z.object({
   existing_investments: z.number().min(0, 'Must be positive'),
   dependents: z.number().int().min(0, 'Must be positive'),
   employment_type: z.string().min(1, 'Required'),
+  essential_expenses: z.number().min(0, 'Must be positive'),
+  emi_obligations: z.number().min(0, 'Must be positive'),
+  mandatory_commitments: z.number().min(0, 'Must be positive'),
+  emergency_fund_contribution: z.number().min(0, 'Must be positive'),
 });
 
 type ProfileUpdateFormData = z.infer<typeof profileUpdateSchema>;
@@ -41,6 +45,10 @@ export const Profile: React.FC = () => {
       existing_investments: profile.existing_investments,
       dependents: profile.dependents,
       employment_type: profile.employment_type || 'Salaried',
+      essential_expenses: profile.essential_expenses || 0,
+      emi_obligations: profile.emi_obligations || 0,
+      mandatory_commitments: profile.mandatory_commitments || 0,
+      emergency_fund_contribution: profile.emergency_fund_contribution || 0,
     } : undefined,
   });
 
@@ -102,6 +110,7 @@ export const Profile: React.FC = () => {
             {serverError && <div className="alert alert-danger">{serverError}</div>}
 
             <form onSubmit={handleSubmit(onSubmit)}>
+              <h4 className="section-title mb-3">Core Income & Asset Metrics</h4>
               <div className="form-row-2">
                 <InputField
                   label="Monthly Income (₹)"
@@ -162,6 +171,43 @@ export const Profile: React.FC = () => {
                 </div>
               </div>
 
+              <hr className="divider-dark my-4" />
+              <h4 className="section-title mb-3">Capacity Engine Allocations (Monthly)</h4>
+
+              <div className="form-row-2">
+                <InputField
+                  label="Essential Expenses (Rent, Bills, Food) (₹)"
+                  type="number"
+                  error={errors.essential_expenses?.message}
+                  disabled={updateMutation.isPending}
+                  {...register('essential_expenses', { valueAsNumber: true })}
+                />
+                <InputField
+                  label="EMI & Debt Obligations (₹)"
+                  type="number"
+                  error={errors.emi_obligations?.message}
+                  disabled={updateMutation.isPending}
+                  {...register('emi_obligations', { valueAsNumber: true })}
+                />
+              </div>
+
+              <div className="form-row-2">
+                <InputField
+                  label="Mandatory Commitments (Insurance, Fees) (₹)"
+                  type="number"
+                  error={errors.mandatory_commitments?.message}
+                  disabled={updateMutation.isPending}
+                  {...register('mandatory_commitments', { valueAsNumber: true })}
+                />
+                <InputField
+                  label="Emergency Fund Monthly Contribution (₹)"
+                  type="number"
+                  error={errors.emergency_fund_contribution?.message}
+                  disabled={updateMutation.isPending}
+                  {...register('emergency_fund_contribution', { valueAsNumber: true })}
+                />
+              </div>
+
               <div className="form-actions mt-3">
                 <Button type="submit" variant="primary" isLoading={updateMutation.isPending}>
                   Save Changes
@@ -181,6 +227,20 @@ export const Profile: React.FC = () => {
                 </h3>
                 <p className="text-secondary text-xs mt-1">
                   Surplus is calculated as Income minus Expenses, representing your capacity to fund goals.
+                </p>
+              </div>
+            </div>
+
+            <hr className="divider-dark my-4" />
+
+            <div className="summary-stat-group bg-surface-dark-only p-3 rounded-lg border border-primary-dark">
+              <div className="stat-item-inner">
+                <span className="text-primary text-sm font-semibold">Available Investment Capacity</span>
+                <h3 className="stat-value-large text-primary mt-1">
+                  {profile ? formatINR(profile.available_capacity) : '₹0'}
+                </h3>
+                <p className="text-secondary text-xs mt-1">
+                  Calculated as: Income - Essential Expenses - EMI Obligations - Mandatory Commitments - Emergency Fund Contribution. This is your safe multi-goal budget.
                 </p>
               </div>
             </div>

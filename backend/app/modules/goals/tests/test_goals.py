@@ -99,7 +99,7 @@ class TestCheckEndpoint:
     def test_feasible_goal_returns_feasible(self):
         res = client.post("/api/v1/goals/check", json=base_payload(monthly_contribution=25000))
         assert res.status_code == 200
-        assert res.json()["feasibility"]["status"] in ("feasible", "borderline")
+        assert res.json()["feasibility"]["status"] in ("highly_feasible", "feasible", "borderline")
 
     def test_short_term_high_risk_triggers_guardrail(self):
         res = client.post(
@@ -137,7 +137,7 @@ class TestCreateGoal:
         assert res.status_code == 422
         body = res.json()
         assert "feasibility" in body
-        assert body["feasibility"]["status"] == "infeasible"
+        assert body["feasibility"]["status"] in ("unlikely", "at_risk")
         assert body["feasibility"]["suggested_monthly_sip"] is not None
 
     def test_blocks_short_term_high_risk_before_even_checking_feasibility(self):
