@@ -308,12 +308,13 @@ class GoalService:
         return GoalOut(**enriched, recommended_funds=_attach_recommended_funds(row["fund_category_mix"]))
 
     @staticmethod
-    def list_goals(access_token: str, user_id: str, limit: int = 20, offset: int = 0) -> list[GoalOut]:
+    def list_goals(access_token: str, user_id: str, limit: int = 20, offset: int = 0, attach_funds: bool = False) -> list[GoalOut]:
         rows = GoalRepository.list_by_user(access_token, user_id, limit=limit, offset=offset)
         res = []
         for row in rows:
             enriched = _enrich_goal_out(row)
-            res.append(GoalOut(**enriched, recommended_funds=_attach_recommended_funds(row["fund_category_mix"])))
+            funds = _attach_recommended_funds(row["fund_category_mix"]) if attach_funds else {}
+            res.append(GoalOut(**enriched, recommended_funds=funds))
         return res
     
     @staticmethod

@@ -1,8 +1,12 @@
+import time
+import structlog
 from app.core.exceptions import AppError
 from app.modules.profile.service import ProfileService
 from app.modules.goals.service import GoalService
 from app.modules.retirement.service import RetirementService
 from app.modules.emergency_fund.service import EmergencyFundService
+
+logger = structlog.get_logger()
 
 
 def build_user_context(access_token: str, user_id: str) -> dict:
@@ -18,6 +22,7 @@ def build_user_context(access_token: str, user_id: str) -> dict:
     """
     context: dict = {}
 
+    t0 = time.perf_counter()
     try:
         profile = ProfileService.get_profile(access_token, user_id)
         context["profile"] = {
@@ -36,7 +41,10 @@ def build_user_context(access_token: str, user_id: str) -> dict:
         }
     except AppError:
         context["profile"] = None
+    t1 = time.perf_counter()
+    logger.info("chatbot_context_timing", module="profile", duration_ms=round((t1 - t0) * 1000, 2))
 
+    t0 = time.perf_counter()
     try:
         goals = GoalService.list_goals(access_token, user_id)
         context["goals"] = [
@@ -59,7 +67,10 @@ def build_user_context(access_token: str, user_id: str) -> dict:
         ]
     except AppError:
         context["goals"] = []
+    t1 = time.perf_counter()
+    logger.info("chatbot_context_timing", module="goals", duration_ms=round((t1 - t0) * 1000, 2))
 
+    t0 = time.perf_counter()
     try:
         retirement = RetirementService.get(access_token, user_id)
         context["retirement"] = {
@@ -71,7 +82,10 @@ def build_user_context(access_token: str, user_id: str) -> dict:
         }
     except AppError:
         context["retirement"] = None
+    t1 = time.perf_counter()
+    logger.info("chatbot_context_timing", module="retirement", duration_ms=round((t1 - t0) * 1000, 2))
 
+    t0 = time.perf_counter()
     try:
         ef = EmergencyFundService.get(access_token, user_id)
         context["emergency_fund"] = {
@@ -82,5 +96,7 @@ def build_user_context(access_token: str, user_id: str) -> dict:
         }
     except AppError:
         context["emergency_fund"] = None
+    t1 = time.perf_counter()
+    logger.info("chatbot_context_timing", module="emergency_fund", duration_ms=round((t1 - t0) * 1000, 2))
 
     return context

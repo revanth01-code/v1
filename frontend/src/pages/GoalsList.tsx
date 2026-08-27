@@ -15,6 +15,7 @@ export const GoalsList: React.FC = () => {
     queryKey: ['goals'],
     queryFn: () => goalsService.getGoals(),
     retry: 1,
+    refetchOnMount: false,
   });
 
   if (isLoading) {

@@ -1,7 +1,11 @@
 import json
+import time
+import structlog
 from app.integrations import groq
 from .context_builder import build_user_context
 from .schemas import ChatRequest
+
+logger = structlog.get_logger()
 
 SYSTEM_PROMPT_TEMPLATE = """You are a financial coach embedded in a goal-based investment planning app.
 Use the JSON context below — which reflects the user's ACTUAL saved data — to answer their question specifically and accurately.
@@ -23,7 +27,11 @@ MAX_HISTORY_MESSAGES = 20
 class ChatbotService:
     @staticmethod
     def send_message(access_token: str, user_id: str, payload: ChatRequest) -> str:
+        t0 = time.perf_counter()
         context = build_user_context(access_token, user_id)
+        t1 = time.perf_counter()
+        logger.info("chatbot_timing", step="context_building", duration_ms=round((t1 - t0) * 1000, 2))
+
         system_prompt = SYSTEM_PROMPT_TEMPLATE.format(context_json=json.dumps(context, indent=2))
 
         trimmed_history = payload.messages[-MAX_HISTORY_MESSAGES:]
@@ -31,4 +39,10 @@ class ChatbotService:
             {"role": m.role, "content": m.content} for m in trimmed_history
         ]
 
-        return groq.get_chat_completion(groq_messages)
+        t2 = time.perf_counter()
+        reply = groq.get_chat_completion(groq_messages)
+        t3 = time.perf_counter()
+        logger.info("chatbot_timing", step="llm_call", duration_ms=round((t3 - t2) * 1000, 2))
+        logger.info("chatbot_timing", step="total_request", duration_ms=round((t3 - t0) * 1000, 2))
+
+        return reply
