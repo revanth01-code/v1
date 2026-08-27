@@ -23,7 +23,7 @@ export const Button: React.FC<ButtonProps> = ({
     >
       {isLoading ? (
         <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true">
-          Loading...
+
         </span>
       ) : (
         children
