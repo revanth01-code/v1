@@ -4,6 +4,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Header } from '../components/layout/Header';
+import { LandingPage } from '../pages/LandingPage';
 
 import { useQuery } from '@tanstack/react-query';
 import { dashboardService } from '../services/dashboardService';
@@ -32,6 +33,9 @@ export const DashboardLayout: React.FC = () => {
   }
 
   if (!isAuthenticated) {
+    if (location.pathname === '/') {
+      return <LandingPage />;
+    }
     // Redirect to login page and keep track of where they wanted to go
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
