@@ -4,6 +4,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Header } from '../components/layout/Header';
+import { FloatingCoach } from '../components/coach/FloatingCoach';
 
 import { useQuery } from '@tanstack/react-query';
 import { dashboardService } from '../services/dashboardService';
@@ -24,8 +25,9 @@ export const DashboardLayout: React.FC = () => {
   if (isLoading) {
     return (
       <div className="layout-loading">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading session...</span>
+        <div className="layout-loading-inner">
+          <div className="spinner-border" role="status" aria-hidden="true" />
+          <span className="layout-loading-text">Loading session...</span>
         </div>
       </div>
     );
@@ -48,7 +50,6 @@ export const DashboardLayout: React.FC = () => {
     if (pathname === '/emergency-fund') return 'Emergency Fund Tracker';
     if (pathname === '/retirement') return 'Retirement Planner';
     if (pathname === '/funds') return 'Fund Explorer';
-    if (pathname === '/coach') return 'AI Financial Coach';
     if (pathname === '/profile') return 'Profile Settings';
     return 'Goal-Based Investment Platform';
   };
@@ -65,6 +66,7 @@ export const DashboardLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
+      <FloatingCoach />
     </div>
   );
 };

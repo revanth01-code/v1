@@ -8,7 +8,6 @@ import {
   ShieldAlert,
   Hourglass,
   TrendingUp,
-  MessageSquare,
   User,
   LogOut,
   X,
@@ -30,7 +29,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: 'Emergency Fund', path: '/emergency-fund', icon: ShieldAlert },
     { name: 'Retirement Planner', path: '/retirement', icon: Hourglass },
     { name: 'Fund Explorer', path: '/funds', icon: TrendingUp },
-    { name: 'AI Coach', path: '/coach', icon: MessageSquare },
     { name: 'Profile Settings', path: '/profile', icon: User },
   ];
 

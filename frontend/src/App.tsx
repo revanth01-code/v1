@@ -20,7 +20,6 @@ import { GoalDetails } from './pages/GoalDetails';
 import { EmergencyFund } from './pages/EmergencyFund';
 import { RetirementPlan } from './pages/RetirementPlan';
 import { FundExplorer } from './pages/FundExplorer';
-import { CoachChat } from './pages/CoachChat';
 import { WhatIfLab } from './pages/WhatIfLab';
 
 import './App.css';
@@ -60,7 +59,6 @@ const App: React.FC = () => {
               <Route path="/emergency-fund" element={<EmergencyFund />} />
               <Route path="/retirement" element={<RetirementPlan />} />
               <Route path="/funds" element={<FundExplorer />} />
-              <Route path="/coach" element={<CoachChat />} />
               <Route path="/what-if" element={<WhatIfLab />} />
             </Route>
 
