@@ -1,0 +1,18 @@
+name: Mutual Fund Data Sync
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Refresh Mutual Fund Data
+        run: |
+          curl --fail --silent --show-error \
+            -X POST "https://investment-platform-api-fvy0.onrender.com/api/v1/universe/refresh" \
+            -H "x-admin-key: ${{ secrets.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json"
