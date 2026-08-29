@@ -9,8 +9,9 @@ export const AuthLayout: React.FC = () => {
   if (isLoading) {
     return (
       <div className="layout-loading">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+        <div className="layout-loading-inner">
+          <div className="spinner-border" role="status" aria-hidden="true" />
+          <span className="layout-loading-text">Loading...</span>
         </div>
       </div>
     );
