@@ -136,6 +136,13 @@ export const GoalDetails: React.FC = () => {
                 <span className="font-semibold text-primary">{formatINR(goal.monthly_contribution)}</span>
               </div>
 
+              {goal.sip_day !== undefined && goal.sip_day !== null && (
+                <div className="detail-row">
+                  <span className="text-secondary">SIP payment day</span>
+                  <span className="font-semibold text-primary">Day {goal.sip_day} of month</span>
+                </div>
+              )}
+
               <div className="detail-row">
                 <span className="text-secondary">Lumpsum contribution</span>
                 <span className="font-semibold text-primary">{formatINR(goal.lumpsum_amount)}</span>

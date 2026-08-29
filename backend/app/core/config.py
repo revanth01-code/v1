@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str = "test-service-key"
 
     GROQ_API_KEY: str = ""
+    NOTIFICATION_API_KEY: str = ""  # Server-to-server key for n8n notification endpoint
     SENTRY_DSN: str = ""
     ALLOWED_ORIGINS: list[str] = ["http://localhost:5173"]
 

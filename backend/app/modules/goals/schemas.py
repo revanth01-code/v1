@@ -19,6 +19,7 @@ class GoalCreate(BaseModel):
     inflation_scenario: Literal["conservative", "expected", "high"] = "expected"
     inflation_rate_override: Optional[float] = Field(default=None, ge=0)
     priority_rank: Optional[int] = Field(default=None, ge=1, description="Optional 1-based user defined priority rank")
+    sip_day: Optional[int] = Field(default=None, ge=1, le=28)
 
     @model_validator(mode="after")
     def check_contribution_matches_mode(self):
@@ -70,5 +71,6 @@ class GoalOut(BaseModel):
     inflation_rate_pct: float = 6.0
     inflation_rate_override: Optional[float] = None
     priority_rank: Optional[int] = None
+    sip_day: Optional[int] = None
     strategies: Optional[dict] = None
     recommended_funds: dict[str, list[FundOut]] = Field(default_factory=dict)

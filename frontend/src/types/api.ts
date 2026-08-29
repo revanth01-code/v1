@@ -86,6 +86,7 @@ export interface GoalCreate {
   importance: string;
   inflation_scenario: string;
   inflation_rate_override?: number | null;
+  sip_day?: number | null;
 }
 
 export interface GuardrailResult {
@@ -160,6 +161,7 @@ export interface GoalOut {
   inflation_rate_override: number | null;
   strategies: Record<string, GoalStrategy> | null;
   priority_rank: number | null;
+  sip_day: number | null;
 }
 
 export interface EmergencyFundCreate {
