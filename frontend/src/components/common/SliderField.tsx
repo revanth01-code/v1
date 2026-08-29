@@ -2,7 +2,7 @@
 import React from 'react';
 
 interface SliderFieldProps {
-  label: string;
+  label: string | React.ReactNode;
   min: number;
   max: number;
   step?: number;

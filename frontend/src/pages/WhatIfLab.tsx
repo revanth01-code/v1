@@ -6,6 +6,7 @@ import { simulationService } from '../services/simulationService';
 import { Card } from '../components/common/Card';
 import { SliderField } from '../components/common/SliderField';
 import { StatusIndicator } from '../components/common/StatusIndicator';
+import { InfoTooltip } from '../components/common/InfoTooltip';
 import { formatINR } from '../utils/currency';
 import { 
   Sliders, 
@@ -272,7 +273,12 @@ export const WhatIfLab: React.FC = () => {
                   formatValue={(v) => `${v}% Equity / ${100 - v}% Debt`}
                 />
                 <SliderField
-                  label="Expected Inflation Rate (%)"
+                  label={
+                    <span className="d-flex align-items-center">
+                      Expected Inflation Rate (%)
+                      <InfoTooltip term="Inflation Rate" explanation="Inflation means things generally become more expensive over time. We use it to estimate what your goal may cost in the future." />
+                    </span>
+                  }
                   min={0}
                   max={15}
                   step={0.5}
@@ -362,7 +368,10 @@ export const WhatIfLab: React.FC = () => {
 
                     <div className="stat-summary-rows-simple mt-2 d-flex flex-column gap-2">
                       <div className="row-val">
-                        <span className="text-secondary text-2xs block">Success Probability</span>
+                        <span className="text-secondary text-2xs block d-flex align-items-center">
+                          Success Probability
+                          <InfoTooltip term="Success Probability" explanation="Success probability is an estimate of how likely the current plan is to reach your target under the assumptions used by InvestPlan. It is an estimate, not a guarantee." />
+                        </span>
                         <span className="font-bold text-sm text-primary">{results.current_plan.prob_success}%</span>
                       </div>
                       <div className="row-val">
@@ -370,7 +379,10 @@ export const WhatIfLab: React.FC = () => {
                         <span className="font-semibold text-sm text-primary">{formatINR(results.current_plan.median_corpus)}</span>
                       </div>
                       <div className="row-val">
-                        <span className="text-secondary text-2xs block">Inflation-Adjusted Target</span>
+                        <span className="text-secondary text-2xs block d-flex align-items-center">
+                          Inflation-Adjusted Target
+                          <InfoTooltip term="Inflation-Adjusted Target" explanation="The estimated future cost of your goal, calculated by increasing your current target amount by the expected inflation rate over time." />
+                        </span>
                         <span className="font-semibold text-sm text-secondary">{formatINR(results.current_plan.adjusted_target)}</span>
                       </div>
                       <div className="row-val">
@@ -394,7 +406,10 @@ export const WhatIfLab: React.FC = () => {
 
                     <div className="stat-summary-rows-simple mt-2 d-flex flex-column gap-2">
                       <div className="row-val">
-                        <span className="text-secondary text-2xs block">Success Probability</span>
+                        <span className="text-secondary text-2xs block d-flex align-items-center">
+                          Success Probability
+                          <InfoTooltip term="Success Probability" explanation="Success probability is an estimate of how likely the current plan is to reach your target under the assumptions used by InvestPlan. It is an estimate, not a guarantee." />
+                        </span>
                         <span className={`font-bold text-sm ${results.what_if_plan.prob_success >= results.current_plan.prob_success ? 'text-success' : 'text-danger'}`}>
                           {results.what_if_plan.prob_success}%
                         </span>
@@ -404,7 +419,10 @@ export const WhatIfLab: React.FC = () => {
                         <span className="font-semibold text-sm text-primary">{formatINR(results.what_if_plan.median_corpus)}</span>
                       </div>
                       <div className="row-val">
-                        <span className="text-secondary text-2xs block">Inflation-Adjusted Target</span>
+                        <span className="text-secondary text-2xs block d-flex align-items-center">
+                          Inflation-Adjusted Target
+                          <InfoTooltip term="Inflation-Adjusted Target" explanation="The estimated future cost of your goal, calculated by increasing your current target amount by the expected inflation rate over time." />
+                        </span>
                         <span className="font-semibold text-sm text-secondary">{formatINR(results.what_if_plan.adjusted_target)}</span>
                       </div>
                       <div className="row-val">

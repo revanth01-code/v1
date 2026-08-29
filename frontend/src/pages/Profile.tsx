@@ -8,6 +8,7 @@ import { profileService } from '../services/profileService';
 import { Card } from '../components/common/Card';
 import { InputField } from '../components/common/InputField';
 import { Button } from '../components/common/Button';
+import { InfoTooltip } from '../components/common/InfoTooltip';
 import { formatINR } from '../utils/currency';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
@@ -221,7 +222,10 @@ export const Profile: React.FC = () => {
           <Card title="Financial Context Summary" className="bg-surface-dark-subtle border-none">
             <div className="summary-stat-group">
               <div className="stat-item-inner">
-                <span className="text-secondary text-sm">Monthly Net Surplus</span>
+                <span className="text-secondary text-sm">
+                  Monthly Net Surplus
+                  <InfoTooltip term="Monthly Net Surplus" explanation="Surplus is calculated as Income minus Expenses, representing your capacity to fund goals." />
+                </span>
                 <h3 className={`stat-value-large ${profile && profile.monthly_surplus >= 0 ? 'text-success' : 'text-danger'}`}>
                   {profile ? formatINR(profile.monthly_surplus) : '₹0'}
                 </h3>
@@ -235,7 +239,10 @@ export const Profile: React.FC = () => {
 
             <div className="summary-stat-group bg-surface-dark-only p-3 rounded-lg border border-primary-dark">
               <div className="stat-item-inner">
-                <span className="text-primary text-sm font-semibold">Available Investment Capacity</span>
+                <span className="text-primary text-sm font-semibold">
+                  Available Investment Capacity
+                  <InfoTooltip term="Available Monthly Capacity" explanation="The portion of your monthly income that is available for investing after deducting essential expenses and other commitments." />
+                </span>
                 <h3 className="stat-value-large text-primary mt-1">
                   {profile ? formatINR(profile.available_capacity) : '₹0'}
                 </h3>

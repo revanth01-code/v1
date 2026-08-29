@@ -11,6 +11,7 @@ import { InputField } from '../components/common/InputField';
 import { SliderField } from '../components/common/SliderField';
 import { Button } from '../components/common/Button';
 import { StatusIndicator } from '../components/common/StatusIndicator';
+import { InfoTooltip } from '../components/common/InfoTooltip';
 import { formatINR } from '../utils/currency';
 import { ShieldAlert, CheckCircle2, Info } from 'lucide-react';
 
@@ -126,7 +127,12 @@ export const EmergencyFund: React.FC = () => {
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="form-group mb-3">
                 <SliderField
-                  label="Target Coverage (Months)"
+                  label={
+                    <span className="d-flex align-items-center">
+                      Target Coverage (Months)
+                      <InfoTooltip term="Target Coverage" explanation="The number of months your emergency fund could cover your essential living expenses if your income were to stop." />
+                    </span>
+                  }
                   min={1}
                   max={24}
                   step={0.5}
@@ -197,7 +203,10 @@ export const EmergencyFund: React.FC = () => {
 
               <div className="detail-rows">
                 <div className="detail-row">
-                  <span className="text-secondary">Safety Net Target</span>
+                  <span className="text-secondary">
+                    Safety Net Target
+                    <InfoTooltip term="Safety Net Reserve" explanation="The total amount of liquid funds you should keep easily accessible for unforeseen emergencies, based on your monthly expenses." />
+                  </span>
                   <span className="font-semibold text-primary">{formatINR(plan.target_amount)}</span>
                 </div>
 

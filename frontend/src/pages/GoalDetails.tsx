@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { goalsService } from '../services/goalsService';
 import { Card } from '../components/common/Card';
 import { StatusIndicator } from '../components/common/StatusIndicator';
+import { InfoTooltip } from '../components/common/InfoTooltip';
 import { Button } from '../components/common/Button';
 import { formatINR } from '../utils/currency';
 import { formatDate } from '../utils/date';
@@ -100,7 +101,10 @@ export const GoalDetails: React.FC = () => {
               Saved Plan ID: <code>{goal.id}</code> | Created {formatDate(goal.created_at)}
             </p>
           </div>
-          <StatusIndicator status={goal.feasibility_status} />
+          <div className="d-flex align-items-center">
+            <StatusIndicator status={goal.feasibility_status} />
+            <InfoTooltip term="Feasibility Status" explanation="Indicates if your current funding and timeline are sufficient to reach your goal's target amount." />
+          </div>
         </div>
       </div>
 
@@ -144,6 +148,7 @@ export const GoalDetails: React.FC = () => {
                 <span className="font-semibold text-accent d-flex align-items-center">
                   <TrendingUp size={14} className="me-1 text-accent" />
                   {goal.expected_return_pct}% p.a. ({goal.risk_level.toUpperCase()} Risk)
+                  <InfoTooltip term="Risk Level" explanation="Risk level describes how much investment value may fluctuate. Lower-risk strategies usually have smaller fluctuations but may offer lower expected returns. Higher-risk strategies can fluctuate more in exchange for potentially higher returns." />
                 </span>
               </div>
 
@@ -153,7 +158,10 @@ export const GoalDetails: React.FC = () => {
               </div>
 
               <div className="detail-row border-primary-dark pt-2 mt-2">
-                <span className="text-primary font-bold">Inflation-Adjusted Target</span>
+                <span className="text-primary font-bold">
+                  Inflation-Adjusted Target
+                  <InfoTooltip term="Inflation-Adjusted Target" explanation="The estimated future cost of your goal, calculated by increasing your current target amount by the expected inflation rate over time." />
+                </span>
                 <span className="font-bold text-primary">{formatINR(goal.inflation_adjusted_target)}</span>
               </div>
 
@@ -197,7 +205,10 @@ export const GoalDetails: React.FC = () => {
             <Card title="Monte Carlo Stochastic Projections" className="mt-4">
               <div className="detail-rows">
                 <div className="detail-row">
-                  <span className="text-secondary">Success Probability</span>
+                  <span className="text-secondary">
+                    Success Probability
+                    <InfoTooltip term="Success Probability" explanation="Success probability is an estimate of how likely the current plan is to reach your target under the assumptions used by InvestPlan. It is an estimate, not a guarantee." />
+                  </span>
                   <span className="font-bold text-success text-sm">{simResult.prob_success}%</span>
                 </div>
                 <div className="detail-row">
@@ -224,7 +235,10 @@ export const GoalDetails: React.FC = () => {
                   <>
                     <hr className="divider-neutral my-2" />
                     <div className="detail-row">
-                      <span className="text-secondary">Median Shortfall</span>
+                      <span className="text-secondary">
+                        Median Shortfall
+                        <InfoTooltip term="Funding Gap" explanation="Funding gap is the difference between the amount you may need for your goal and the amount your current plan is projected to provide." />
+                      </span>
                       <span className="font-semibold text-danger">{formatINR(simResult.median_shortfall)}</span>
                     </div>
                     <div className="detail-row">

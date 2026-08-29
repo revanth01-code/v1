@@ -10,6 +10,7 @@ import { Card } from '../components/common/Card';
 import { InputField } from '../components/common/InputField';
 import { Button } from '../components/common/Button';
 import { StatusIndicator } from '../components/common/StatusIndicator';
+import { InfoTooltip } from '../components/common/InfoTooltip';
 import { formatINR } from '../utils/currency';
 import { Hourglass, CheckCircle2, Info } from 'lucide-react';
 
@@ -187,7 +188,12 @@ export const RetirementPlan: React.FC = () => {
 
               <div className="form-row-3">
                 <InputField
-                  label="Inflation Rate (%)"
+                  label={
+                    <span className="d-flex align-items-center">
+                      Inflation Rate (%)
+                      <InfoTooltip term="Inflation Rate" explanation="Inflation means things generally become more expensive over time. We use it to estimate what your goal may cost in the future." />
+                    </span>
+                  }
                   type="number"
                   step="0.1"
                   error={errors.inflation_pct?.message}
