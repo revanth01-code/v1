@@ -11,6 +11,7 @@ import { InputField } from '../components/common/InputField';
 import { SliderField } from '../components/common/SliderField';
 import { Button } from '../components/common/Button';
 import { StatusIndicator } from '../components/common/StatusIndicator';
+import { InfoTooltip } from '../components/common/InfoTooltip';
 import { formatINR } from '../utils/currency';
 import { getMinGoalDate } from '../utils/date';
 import {
@@ -309,7 +310,12 @@ export const GoalCreateEdit: React.FC = () => {
           <Card title="Goal Planner & Calculator">
             <form onSubmit={handleSubmit(onSubmit)}>
               <InputField
-                label="Goal Name"
+                label={
+                  <>
+                    Goal Name
+                    <InfoTooltip term="Goal Name" explanation="Give your goal a name so you can easily identify it later." />
+                  </>
+                }
                 type="text"
                 id="name"
                 placeholder="e.g. Dream House Downpayment"
@@ -363,6 +369,7 @@ export const GoalCreateEdit: React.FC = () => {
                       <div className="form-group">
                         <label className="form-label">
                           Target Amount
+                          <InfoTooltip term="Target Amount" explanation="The total amount of money you need to achieve this goal." />
                         </label>
 
                         <div className="currency-input-wrapper">
@@ -400,7 +407,12 @@ export const GoalCreateEdit: React.FC = () => {
                 />
 
                 <InputField
-                  label="Target Date"
+                  label={
+                    <>
+                      Target Date
+                      <InfoTooltip term="Target Date" explanation="The date by which you want to have enough money for this goal." />
+                    </>
+                  }
                   type="date"
                   id="target_date"
                   min={getMinGoalDate()}
@@ -413,6 +425,7 @@ export const GoalCreateEdit: React.FC = () => {
                 <div className="form-group">
                   <label htmlFor="risk_level" className="form-label">
                     Risk Level
+                    <InfoTooltip term="Risk Level" explanation="Risk level describes how much investment value may fluctuate. Lower-risk strategies usually have smaller fluctuations but may offer lower expected returns. Higher-risk strategies can fluctuate more in exchange for potentially higher returns." />
                   </label>
 
                   <select
@@ -438,6 +451,7 @@ export const GoalCreateEdit: React.FC = () => {
                     className="form-label"
                   >
                     How will you fund this?
+                    <InfoTooltip term="How will you fund this?" explanation="Choose how you plan to save: monthly installments (SIP), a one-time lumpsum, or both." />
                   </label>
 
                   <select
@@ -507,6 +521,7 @@ export const GoalCreateEdit: React.FC = () => {
                         <div className="form-group">
                           <label className="form-label">
                             Monthly Contribution
+                            <InfoTooltip term="Monthly Contribution" explanation="The amount you plan to invest every month towards this goal." />
                           </label>
 
                           <div className="currency-input-wrapper">
@@ -549,7 +564,12 @@ export const GoalCreateEdit: React.FC = () => {
                     control={control}
                     render={({ field }) => (
                       <SliderField
-                        label="Lumpsum Amount (₹)"
+                        label={
+                          <>
+                            Lumpsum Amount (₹)
+                            <InfoTooltip term="Lumpsum Amount" explanation="A one-time initial investment you can make right now towards this goal." />
+                          </>
+                        }
                         min={0}
                         max={10000000}
                         step={10000}
@@ -571,7 +591,10 @@ export const GoalCreateEdit: React.FC = () => {
 
               <div className="form-row-2">
                 <div className="form-group">
-                  <label htmlFor="goal_type" className="form-label">Goal Category</label>
+                  <label htmlFor="goal_type" className="form-label">
+                    Goal Category
+                    <InfoTooltip term="Goal Category" explanation="Categorizing your goal helps us apply the right default inflation rate (e.g., education costs rise faster than general items)." />
+                  </label>
                   <select id="goal_type" className="form-control" {...register('goal_type')}>
                     <option value="custom">Custom (6% base inflation)</option>
                     <option value="education">Education (8% base inflation)</option>
@@ -585,7 +608,10 @@ export const GoalCreateEdit: React.FC = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="priority" className="form-label">Goal Priority</label>
+                  <label htmlFor="priority" className="form-label">
+                    Goal Priority
+                    <InfoTooltip term="Goal Priority" explanation="Tells InvestPlan which goals are most important. If your available funds are limited, higher priority goals will receive funding first." />
+                  </label>
                   <select id="priority" className="form-control" {...register('priority')}>
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -596,7 +622,10 @@ export const GoalCreateEdit: React.FC = () => {
 
               <div className="form-row-2 mt-2">
                 <div className="form-group">
-                  <label htmlFor="deadline_flexibility" className="form-label">Deadline Flexibility</label>
+                  <label htmlFor="deadline_flexibility" className="form-label">
+                    Deadline Flexibility
+                    <InfoTooltip term="Deadline Flexibility" explanation="How strict your target date is. Flexible goals have a higher chance of success as they can wait for markets to recover." />
+                  </label>
                   <select id="deadline_flexibility" className="form-control" {...register('deadline_flexibility')}>
                     <option value="flexible">Flexible (+/- 12 months)</option>
                     <option value="semi-flexible">Semi-Flexible (+/- 6 months)</option>
@@ -605,7 +634,10 @@ export const GoalCreateEdit: React.FC = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="importance" className="form-label">Goal Importance</label>
+                  <label htmlFor="importance" className="form-label">
+                    Goal Importance
+                    <InfoTooltip term="Goal Importance" explanation="Tells us how critical this goal is, so we can prioritize it in your overall financial plan." />
+                  </label>
                   <select id="importance" className="form-control" {...register('importance')}>
                     <option value="optional">Optional / Luxury</option>
                     <option value="important">Important / Standard</option>
@@ -616,7 +648,10 @@ export const GoalCreateEdit: React.FC = () => {
 
               <div className="form-row-2 mt-2">
                 <div className="form-group">
-                  <label htmlFor="inflation_scenario" className="form-label">Inflation Scenario</label>
+                  <label htmlFor="inflation_scenario" className="form-label">
+                    Inflation Scenario
+                    <InfoTooltip term="Inflation Scenario" explanation="Different goals experience different inflation. Education costs often rise faster than general inflation. We adjust the base rate based on the scenario." />
+                  </label>
                   <select id="inflation_scenario" className="form-control" {...register('inflation_scenario')}>
                     <option value="expected">Expected Scenario (Base)</option>
                     <option value="conservative">Conservative Scenario (Base - 2%)</option>
@@ -625,7 +660,10 @@ export const GoalCreateEdit: React.FC = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="inflation_rate_override" className="form-label">Inflation Override (% p.a.)</label>
+                  <label htmlFor="inflation_rate_override" className="form-label">
+                    Inflation Override (% p.a.)
+                    <InfoTooltip term="Inflation Override" explanation="Use a specific percentage if you know exactly how fast the cost of your goal will rise." />
+                  </label>
                   <input
                     type="number"
                     step="0.1"
@@ -769,7 +807,10 @@ export const GoalCreateEdit: React.FC = () => {
                   </div>
 
                   <div className="detail-row border-primary-dark pt-2 mt-2">
-                    <span className="text-primary font-bold">Inflation-Adjusted Target</span>
+                    <span className="text-primary font-bold">
+                      Inflation-Adjusted Target
+                      <InfoTooltip term="Inflation-Adjusted Target" explanation="The estimated future cost of your goal, calculated by increasing your current target amount by the expected inflation rate over time." />
+                    </span>
                     <span className="font-bold text-primary">
                       {formatINR(simulationResult.feasibility.inflation_adjusted_target)}
                     </span>

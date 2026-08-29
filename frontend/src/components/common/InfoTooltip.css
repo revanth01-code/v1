@@ -1,0 +1,168 @@
+/* frontend/src/components/common/InfoTooltip.css */
+
+.info-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.info-tooltip-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+  border-radius: 50%;
+}
+
+.info-tooltip-button:hover,
+.info-tooltip-button:focus-visible {
+  color: var(--accent-color);
+  outline: none;
+}
+
+.info-tooltip-button:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-color-light);
+}
+
+/* ─── Portal-rendered popover ─────────────────────────────────────────────── */
+
+.info-tooltip-popover {
+  /* Fixed to viewport — not clipped by any parent overflow */
+  position: fixed;
+  width: 260px;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 12px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  z-index: 99999;
+  transition: opacity 0.18s ease, visibility 0.18s;
+  pointer-events: none;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-weight: 400;
+}
+
+.info-tooltip-popover.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* ─── Vertical positioning ────────────────────────────────────────────────── */
+
+/* Appears above the icon — offset upward from the stored top (= rect.top) */
+.info-tooltip-popover.pos-top {
+  transform: translateY(calc(-100% - 10px));
+}
+
+/* Appears below the icon — offset downward from the stored top (= rect.bottom) */
+.info-tooltip-popover.pos-bottom {
+  transform: translateY(10px);
+}
+
+/* ─── Horizontal alignment ────────────────────────────────────────────────── */
+
+/* Center: shift left by half the tooltip width */
+.info-tooltip-popover.align-center {
+  margin-left: -130px; /* half of 260px */
+}
+
+/* Left-aligned: icon is near left edge — anchor tooltip's left edge to icon */
+.info-tooltip-popover.align-left {
+  margin-left: -10px;
+}
+
+/* Right-aligned: icon is near right edge — anchor tooltip's right edge to icon */
+.info-tooltip-popover.align-right {
+  margin-left: -250px;
+}
+
+/* ─── Text elements ───────────────────────────────────────────────────────── */
+
+.info-tooltip-title {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.info-tooltip-text {
+  display: block;
+  color: var(--text-secondary);
+}
+
+/* ─── Arrow: pos-top (arrow points downward, at bottom of popover) ─────────── */
+.info-tooltip-popover.pos-top::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--bg-surface) transparent transparent transparent;
+}
+
+.info-tooltip-popover.pos-top::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  border-width: 6px;
+  border-style: solid;
+  border-color: var(--border-color) transparent transparent transparent;
+}
+
+/* Arrow horizontal alignment for pos-top */
+.info-tooltip-popover.pos-top.align-center::after  { left: 50%; margin-left: -5px; }
+.info-tooltip-popover.pos-top.align-center::before { left: 50%; margin-left: -6px; }
+.info-tooltip-popover.pos-top.align-left::after    { left: 16px; }
+.info-tooltip-popover.pos-top.align-left::before   { left: 15px; }
+.info-tooltip-popover.pos-top.align-right::after   { right: 10px; }
+.info-tooltip-popover.pos-top.align-right::before  { right: 9px; }
+
+/* ─── Arrow: pos-bottom (arrow points upward, at top of popover) ──────────── */
+.info-tooltip-popover.pos-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent var(--bg-surface) transparent;
+}
+
+.info-tooltip-popover.pos-bottom::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent var(--border-color) transparent;
+}
+
+/* Arrow horizontal alignment for pos-bottom */
+.info-tooltip-popover.pos-bottom.align-center::after  { left: 50%; margin-left: -5px; }
+.info-tooltip-popover.pos-bottom.align-center::before { left: 50%; margin-left: -6px; }
+.info-tooltip-popover.pos-bottom.align-left::after    { left: 16px; }
+.info-tooltip-popover.pos-bottom.align-left::before   { left: 15px; }
+.info-tooltip-popover.pos-bottom.align-right::after   { right: 10px; }
+.info-tooltip-popover.pos-bottom.align-right::before  { right: 9px; }
+
+/* ─── Mobile ──────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .info-tooltip-popover {
+    width: 220px;
+  }
+}
