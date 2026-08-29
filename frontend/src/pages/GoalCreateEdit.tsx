@@ -21,6 +21,8 @@ import {
   Check,
   Target,
   Shield,
+  TrendingUp,
+  Lightbulb,
 } from 'lucide-react';
 import type { GoalCheckResponse } from '../types/api';
 
@@ -610,7 +612,7 @@ export const GoalCreateEdit: React.FC = () => {
                 <div className="form-group">
                   <label htmlFor="priority" className="form-label">
                     Goal Priority
-                    <InfoTooltip term="Goal Priority" explanation="Tells InvestPlan which goals are most important. If your available funds are limited, higher priority goals will receive funding first." />
+                    <InfoTooltip term="Goal Priority" explanation="Tells FinPilot which goals are most important. If your available funds are limited, higher priority goals will receive funding first." />
                   </label>
                   <select id="priority" className="form-control" {...register('priority')}>
                     <option value="low">Low</option>
@@ -878,6 +880,91 @@ export const GoalCreateEdit: React.FC = () => {
                     </p>
                   </div>
                 )}
+
+                {/* SIP Suggestion Block — shown when plan is infeasible */}
+                {['unlikely', 'at_risk', 'borderline'].includes(simulationResult.feasibility.status) &&
+                  simulationResult.feasibility.suggested_monthly_sip &&
+                  formValues.contribution_mode !== 'lumpsum' && (
+                    <div className="sip-suggestion-card mt-3 p-3 rounded-lg" style={{
+                      background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.08) 100%)',
+                      border: '1px solid rgba(99,102,241,0.35)',
+                    }}>
+                      <div className="d-flex align-items-center mb-2" style={{ gap: '8px' }}>
+                        <span style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          width: 28, height: 28, borderRadius: '50%',
+                          background: 'rgba(99,102,241,0.18)',
+                          flexShrink: 0,
+                        }}>
+                          <Lightbulb size={14} style={{ color: '#818cf8' }} />
+                        </span>
+                        <span className="text-xs font-bold" style={{ color: '#818cf8', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                          SIP Suggestion to Make Plan Feasible
+                        </span>
+                      </div>
+
+                      <p className="text-xs m-0 mb-2" style={{ color: 'var(--text-secondary, #94a3b8)', lineHeight: 1.6 }}>
+                        Your current monthly SIP of{' '}
+                        <strong style={{ color: 'var(--text-primary, #e2e8f0)' }}>
+                          {formatINR(formValues.monthly_contribution)}
+                        </strong>{' '}
+                        is not enough to reach your goal by the target date. If you increase it to:
+                      </p>
+
+                      <div className="d-flex align-items-center justify-content-between p-2 rounded mb-2" style={{
+                        background: 'rgba(99,102,241,0.15)',
+                        border: '1px solid rgba(99,102,241,0.25)',
+                      }}>
+                        <div className="d-flex align-items-center" style={{ gap: '8px' }}>
+                          <TrendingUp size={16} style={{ color: '#34d399', flexShrink: 0 }} />
+                          <div>
+                            <div className="font-bold" style={{ color: '#34d399', fontSize: '1.1rem' }}>
+                              {formatINR(simulationResult.feasibility.suggested_monthly_sip)}
+                            </div>
+                            <div className="text-2xs" style={{ color: 'var(--text-secondary, #94a3b8)' }}>
+                              +{formatINR(
+                                simulationResult.feasibility.suggested_monthly_sip -
+                                formValues.monthly_contribution
+                              )}{' '}
+                              more per month
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => applySIPSuggestion(simulationResult.feasibility.suggested_monthly_sip!)}
+                          className="btn btn-sm"
+                          style={{
+                            background: 'rgba(99,102,241,0.25)',
+                            border: '1px solid rgba(99,102,241,0.5)',
+                            color: '#818cf8',
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                            padding: '4px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            whiteSpace: 'nowrap',
+                          }}
+                          onMouseEnter={e => {
+                            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(99,102,241,0.45)';
+                            (e.currentTarget as HTMLButtonElement).style.color = '#e0e7ff';
+                          }}
+                          onMouseLeave={e => {
+                            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(99,102,241,0.25)';
+                            (e.currentTarget as HTMLButtonElement).style.color = '#818cf8';
+                          }}
+                        >
+                          Apply this SIP
+                        </button>
+                      </div>
+
+                      <p className="text-2xs m-0" style={{ color: 'var(--text-secondary, #64748b)', lineHeight: 1.5 }}>
+                        💡 Applying this amount will update your monthly contribution and re-run the simulation automatically.
+                      </p>
+                    </div>
+                  )}
 
                 {['feasible', 'highly_feasible'].includes(simulationResult.feasibility.status) && (
                   <div className="alert alert-success mt-3 bg-success-subtle text-success d-flex align-items-center">

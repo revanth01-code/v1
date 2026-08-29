@@ -100,7 +100,7 @@ export const Onboarding: React.FC = () => {
     <div className="onboarding-container">
       <div className="onboarding-header">
         <Target className="logo-icon-lg mb-2" />
-        <h2>Welcome to InvestPlan</h2>
+        <h2>Welcome to FinPilot</h2>
         <p className="subtitle">Let's set up your financial profile to personalize your planners.</p>
       </div>
 

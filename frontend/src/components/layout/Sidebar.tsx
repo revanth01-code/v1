@@ -41,7 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <Target className="logo-icon" />
-            <span className="logo-text">InvestPlan</span>
+            <span className="logo-text">FinPilot</span>
           </div>
           <button className="sidebar-close-btn" onClick={onClose}>
             <X size={20} />

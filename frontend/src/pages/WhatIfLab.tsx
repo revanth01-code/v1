@@ -370,7 +370,7 @@ export const WhatIfLab: React.FC = () => {
                       <div className="row-val">
                         <span className="text-secondary text-2xs block d-flex align-items-center">
                           Success Probability
-                          <InfoTooltip term="Success Probability" explanation="Success probability is an estimate of how likely the current plan is to reach your target under the assumptions used by InvestPlan. It is an estimate, not a guarantee." />
+                          <InfoTooltip term="Success Probability" explanation="Success probability is an estimate of how likely the current plan is to reach your target under the assumptions used by FinPilot. It is an estimate, not a guarantee." />
                         </span>
                         <span className="font-bold text-sm text-primary">{results.current_plan.prob_success}%</span>
                       </div>
@@ -408,7 +408,7 @@ export const WhatIfLab: React.FC = () => {
                       <div className="row-val">
                         <span className="text-secondary text-2xs block d-flex align-items-center">
                           Success Probability
-                          <InfoTooltip term="Success Probability" explanation="Success probability is an estimate of how likely the current plan is to reach your target under the assumptions used by InvestPlan. It is an estimate, not a guarantee." />
+                          <InfoTooltip term="Success Probability" explanation="Success probability is an estimate of how likely the current plan is to reach your target under the assumptions used by FinPilot. It is an estimate, not a guarantee." />
                         </span>
                         <span className={`font-bold text-sm ${results.what_if_plan.prob_success >= results.current_plan.prob_success ? 'text-success' : 'text-danger'}`}>
                           {results.what_if_plan.prob_success}%

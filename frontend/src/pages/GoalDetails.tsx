@@ -207,7 +207,7 @@ export const GoalDetails: React.FC = () => {
                 <div className="detail-row">
                   <span className="text-secondary">
                     Success Probability
-                    <InfoTooltip term="Success Probability" explanation="Success probability is an estimate of how likely the current plan is to reach your target under the assumptions used by InvestPlan. It is an estimate, not a guarantee." />
+                    <InfoTooltip term="Success Probability" explanation="Success probability is an estimate of how likely the current plan is to reach your target under the assumptions used by FinPilot. It is an estimate, not a guarantee." />
                   </span>
                   <span className="font-bold text-success text-sm">{simResult.prob_success}%</span>
                 </div>
