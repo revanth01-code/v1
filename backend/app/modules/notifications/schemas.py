@@ -15,3 +15,18 @@ class SIPReminderItem(BaseModel):
 
 class SIPRemindersResponse(BaseModel):
     reminders: list[SIPReminderItem]
+
+
+class GoalProgressReminderItem(BaseModel):
+    user_id: str
+    email: Optional[str]
+    goal_id: str
+    goal_name: str
+    target_amount: float
+    current_amount: float
+    progress_percentage: float
+    reached_milestones: list[int]
+
+
+class GoalProgressRemindersResponse(BaseModel):
+    reminders: list[GoalProgressReminderItem]

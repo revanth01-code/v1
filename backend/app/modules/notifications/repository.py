@@ -27,6 +27,18 @@ class NotificationRepository:
         return res.data or []
 
     @staticmethod
+    def list_active_goals_for_progress() -> list[dict]:
+        """Return all goals that have a positive target amount to check for milestones."""
+        res = (
+            supabase_admin
+            .table(GOALS_TABLE)
+            .select("id, user_id, name, target_amount, lumpsum_amount")
+            .gt("target_amount", 0)
+            .execute()
+        )
+        return res.data or []
+
+    @staticmethod
     def get_user_email(user_id: str) -> str | None:
         """Fetch a single user's email from Supabase Auth via admin API.
         Returns None if the user cannot be found.

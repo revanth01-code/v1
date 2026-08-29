@@ -1,5 +1,10 @@
 from .repository import NotificationRepository
-from .schemas import SIPReminderItem, SIPRemindersResponse
+from .schemas import (
+    SIPReminderItem,
+    SIPRemindersResponse,
+    GoalProgressReminderItem,
+    GoalProgressRemindersResponse
+)
 
 
 class NotificationService:
@@ -30,3 +35,45 @@ class NotificationService:
             ))
 
         return SIPRemindersResponse(reminders=reminders)
+
+    @staticmethod
+    def get_goal_progress_reminders() -> GoalProgressRemindersResponse:
+        """Calculate progress for active goals and return those that reached a milestone."""
+        goals = NotificationRepository.list_active_goals_for_progress()
+        email_cache: dict[str, str | None] = {}
+        reminders: list[GoalProgressReminderItem] = []
+
+        defined_milestones = [25, 50, 75, 100]
+
+        for goal in goals:
+            target_amount = goal["target_amount"]
+            current_amount = goal.get("lumpsum_amount") or 0.0
+            
+            if target_amount <= 0:
+                continue
+                
+            progress_ratio = current_amount / target_amount
+            progress_percentage = round(progress_ratio * 100, 2)
+            
+            # Find reached milestones
+            reached = [m for m in defined_milestones if progress_percentage >= m]
+            
+            if not reached:
+                continue
+
+            user_id = goal["user_id"]
+            if user_id not in email_cache:
+                email_cache[user_id] = NotificationRepository.get_user_email(user_id)
+
+            reminders.append(GoalProgressReminderItem(
+                user_id=user_id,
+                email=email_cache[user_id],
+                goal_id=goal["id"],
+                goal_name=goal["name"],
+                target_amount=target_amount,
+                current_amount=current_amount,
+                progress_percentage=progress_percentage,
+                reached_milestones=reached,
+            ))
+
+        return GoalProgressRemindersResponse(reminders=reminders)

@@ -204,3 +204,99 @@ class TestSIPRemindersEndpoint:
         assert len(res.json()["reminders"]) == 2
         # Email fetch called only once despite two goals for the same user
         mock_email.assert_called_once_with("u-shared")
+
+
+# ── Goal Progress Tests ────────────────────────────────────────────────────────
+
+class TestGoalProgressEndpoint:
+    def test_auth_rejection(self, monkeypatch):
+        monkeypatch.setattr(settings, "NOTIFICATION_API_KEY", TEST_KEY)
+        res = client.get("/api/v1/notifications/goal-progress")
+        assert res.status_code == 401
+
+    def test_no_matching_milestones(self, monkeypatch):
+        monkeypatch.setattr(settings, "NOTIFICATION_API_KEY", TEST_KEY)
+        goal_10_percent = {
+            "id": "g-1", "user_id": "u-1", "name": "House",
+            "target_amount": 100000, "lumpsum_amount": 10000
+        }
+        with patch(
+            "app.modules.notifications.repository.NotificationRepository.list_active_goals_for_progress",
+            return_value=[goal_10_percent],
+        ):
+            res = client.get("/api/v1/notifications/goal-progress", headers=auth_header())
+        
+        assert res.status_code == 200
+        assert res.json()["reminders"] == []
+
+    def test_milestone_25_percent(self, monkeypatch):
+        monkeypatch.setattr(settings, "NOTIFICATION_API_KEY", TEST_KEY)
+        goal_25_percent = {
+            "id": "g-1", "user_id": "u-1", "name": "House",
+            "target_amount": 100000, "lumpsum_amount": 25000
+        }
+        with (
+            patch(
+                "app.modules.notifications.repository.NotificationRepository.list_active_goals_for_progress",
+                return_value=[goal_25_percent],
+            ),
+            patch(
+                "app.modules.notifications.repository.NotificationRepository.get_user_email",
+                return_value="u1@example.com",
+            )
+        ):
+            res = client.get("/api/v1/notifications/goal-progress", headers=auth_header())
+            
+        assert res.status_code == 200
+        reminders = res.json()["reminders"]
+        assert len(reminders) == 1
+        assert reminders[0]["progress_percentage"] == 25.0
+        assert reminders[0]["reached_milestones"] == [25]
+
+    def test_milestone_100_percent(self, monkeypatch):
+        monkeypatch.setattr(settings, "NOTIFICATION_API_KEY", TEST_KEY)
+        goal_100_percent = {
+            "id": "g-1", "user_id": "u-1", "name": "House",
+            "target_amount": 100000, "lumpsum_amount": 120000  # 120%
+        }
+        with (
+            patch(
+                "app.modules.notifications.repository.NotificationRepository.list_active_goals_for_progress",
+                return_value=[goal_100_percent],
+            ),
+            patch(
+                "app.modules.notifications.repository.NotificationRepository.get_user_email",
+                return_value="u1@example.com",
+            )
+        ):
+            res = client.get("/api/v1/notifications/goal-progress", headers=auth_header())
+            
+        assert res.status_code == 200
+        reminders = res.json()["reminders"]
+        assert len(reminders) == 1
+        assert reminders[0]["progress_percentage"] == 120.0
+        assert set(reminders[0]["reached_milestones"]) == {25, 50, 75, 100}
+
+    def test_missing_user_email(self, monkeypatch):
+        monkeypatch.setattr(settings, "NOTIFICATION_API_KEY", TEST_KEY)
+        goal_50_percent = {
+            "id": "g-1", "user_id": "u-1", "name": "House",
+            "target_amount": 100000, "lumpsum_amount": 50000
+        }
+        with (
+            patch(
+                "app.modules.notifications.repository.NotificationRepository.list_active_goals_for_progress",
+                return_value=[goal_50_percent],
+            ),
+            patch(
+                "app.modules.notifications.repository.NotificationRepository.get_user_email",
+                return_value=None,  # missing email
+            )
+        ):
+            res = client.get("/api/v1/notifications/goal-progress", headers=auth_header())
+            
+        assert res.status_code == 200
+        reminders = res.json()["reminders"]
+        assert len(reminders) == 1
+        assert reminders[0]["email"] is None
+

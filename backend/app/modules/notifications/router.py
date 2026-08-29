@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 from app.core.exceptions import AppError
-from .schemas import SIPRemindersResponse
+from .schemas import SIPRemindersResponse, GoalProgressRemindersResponse
 from .service import NotificationService
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
@@ -42,3 +42,20 @@ def get_sip_reminders(
     _: None = Depends(_require_notification_key),
 ) -> SIPRemindersResponse:
     return NotificationService.get_sip_reminders()
+
+
+@router.get(
+    "/goal-progress",
+    response_model=GoalProgressRemindersResponse,
+    summary="Goal progress milestone data for n8n",
+    description=(
+        "Server-to-server endpoint. Returns goals that have reached a progress "
+        "milestone (25%, 50%, 75%, 100%) and their associated user email addresses, "
+        "so that n8n can decide which notifications to send. "
+        "Requires Authorization: Bearer <NOTIFICATION_API_KEY>."
+    ),
+)
+def get_goal_progress(
+    _: None = Depends(_require_notification_key),
+) -> GoalProgressRemindersResponse:
+    return NotificationService.get_goal_progress_reminders()
