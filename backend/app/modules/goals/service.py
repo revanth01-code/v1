@@ -309,6 +309,7 @@ class GoalService:
             "inflation_rate_pct": inflation_rate,
             "inflation_rate_override": payload.inflation_rate_override,
             "priority_rank": payload.priority_rank,
+            "sip_day": payload.sip_day,
         }
 
         log.info("goal_db_insert_started", feasibility_status=db_feasibility_status)
