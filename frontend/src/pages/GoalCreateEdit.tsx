@@ -48,7 +48,7 @@ const goalSchema = z
       .min(0, 'Lumpsum amount cannot be negative'),
 
     risk_level: z.enum(['low', 'mid', 'high']),
-    
+
     goal_type: z.enum([
       'vacation',
       'house',
@@ -59,15 +59,15 @@ const goalSchema = z
       'healthcare',
       'custom',
     ]),
-    
+
     priority: z.enum(['low', 'medium', 'high']),
-    
+
     deadline_flexibility: z.enum(['flexible', 'semi-flexible', 'inflexible']),
-    
+
     importance: z.enum(['optional', 'important', 'mandatory']),
-    
+
     inflation_scenario: z.enum(['conservative', 'expected', 'high']),
-    
+
     inflation_rate_override: z
       .number()
       .min(0, 'Cannot be negative')
@@ -75,7 +75,7 @@ const goalSchema = z
       .optional(),
     has_sip: z.boolean().optional(),
     sip_day: z
-      .number({ invalid_type_error: 'SIP payment day must be a number' })
+      .number()
       .min(1, 'SIP day must be between 1 and 28')
       .max(28, 'SIP day must be between 1 and 28')
       .nullable()
@@ -645,9 +645,9 @@ export const GoalCreateEdit: React.FC = () => {
                     <div className="form-group">
                       <label htmlFor="sip_day" className="form-label">
                         SIP Payment Day
-                        <InfoTooltip 
-                          term="SIP Payment Day" 
-                          explanation="SIP payment day is the day of each month when your recurring SIP is scheduled. InvestPlan uses this to send you timely reminders." 
+                        <InfoTooltip
+                          term="SIP Payment Day"
+                          explanation="SIP payment day is the day of each month when your recurring SIP is scheduled. InvestPlan uses this to send you timely reminders."
                         />
                       </label>
                       <select
@@ -996,10 +996,10 @@ export const GoalCreateEdit: React.FC = () => {
                             formValues.risk_level === 'mid' ? 'moderate' : 'aggressive'
                           )
                         );
-                        
+
                         return (
-                          <div 
-                            key={name} 
+                          <div
+                            key={name}
                             className={`strategy-card p-3 rounded-lg border bg-surface-dark-only ${isCurrentSelected ? 'border-primary' : 'border-dark'}`}
                           >
                             <div className="d-flex justify-content-between align-items-center">
