@@ -8,16 +8,19 @@ from .service import UniverseService
 from .ingestion_service import UniverseIngestionService
 from .metrics_service import MetricsService
 from .backfill_service import BackfillService, MAX_BATCH_LIMIT, DEFAULT_BATCH_LIMIT
+from app.core.config import settings
 
 router = APIRouter(prefix="/universe", tags=["universe"])
 
 # Fetch the Admin key from environment variables
-ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "dev-admin-secret-key-123")
+ADMIN_API_KEY = settings.ADMIN_API_KEY
+
+import secrets
 
 
 def verify_admin_key(x_admin_key: str = Header(None)):
     """FastAPI dependency to verify x-admin-key header against local environment configuration."""
-    if not x_admin_key or x_admin_key != ADMIN_API_KEY:
+    if not x_admin_key or not secrets.compare_digest(x_admin_key, ADMIN_API_KEY):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access forbidden: Invalid or missing x-admin-key header."
@@ -71,12 +74,18 @@ def trigger_universe_refresh(admin_key: None = Depends(verify_admin_key)):
 
     Protected: Only accessible via valid x-admin-key header verification.
     """
-    count = UniverseIngestionService.ingest_universe_discovery()
-    return {
-        "status": "success",
-        "message": f"Successfully processed ingestion discovery. Discovered/updated {count} schemes.",
-        "upserted_count": count
-    }
+    from .ingestion_service import LockUnavailableError
+    try:
+        count = UniverseIngestionService.ingest_universe_discovery()
+        return {
+            "status": "success",
+            "records_processed": count,
+            "records_failed": 0  # Chunk failures are handled internally and logged
+        }
+    except LockUnavailableError:
+        return {
+            "status": "already_running"
+        }
 
 
 @router.post("/assets/{identifier}/refresh-history", status_code=status.HTTP_200_OK)

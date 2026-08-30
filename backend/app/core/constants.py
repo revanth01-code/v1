@@ -29,7 +29,28 @@ AMFI_NAV_URL = "https://portal.amfiindia.com/spages/NAVAll.txt"
 MFAPI_BASE_URL = "https://api.mfapi.in/mf"
 
 FUND_CATEGORIES = ["largecap", "flexicap", "midcap", "debt"]
-FUND_CACHE_TTL_HOURS = 24
+FUND_CACHE_TTL_HOURS = 0.01
+
+# Category mapping from legacy/frontend categories to asset_universe subcategories
+LEGACY_TO_UNIVERSE_SUBCAT_MAP = {
+    "largecap": ["large_cap"],
+    "flexicap": ["flexi_cap"],
+    "midcap": ["mid_cap", "small_cap"],
+    "debt": ["liquid", "overnight", "ultra_short", "money_market", "short_duration"]
+}
+
+# Inverse mapping from asset_universe subcategory back to legacy category
+UNIVERSE_TO_LEGACY_CAT_MAP = {
+    "large_cap": "largecap",
+    "flexi_cap": "flexicap",
+    "mid_cap": "midcap",
+    "small_cap": "midcap",
+    "liquid": "debt",
+    "overnight": "debt",
+    "ultra_short": "debt",
+    "money_market": "debt",
+    "short_duration": "debt"
+}
 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "openai/gpt-oss-120b"  # current recommended production model (llama-3.3-70b-versatile was deprecated)

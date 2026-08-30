@@ -34,28 +34,35 @@ class TestListFunds:
         stale_time = datetime.now(timezone.utc) - timedelta(hours=48)
         with patch("app.modules.funds.repository.FundRepository.get_latest_refresh_time",
                    return_value=stale_time), \
-             patch("app.integrations.amfi.fetch_and_parse_funds", return_value=[FAKE_CACHE_ROW]) as mock_fetch, \
-             patch("app.modules.funds.repository.FundRepository.upsert_many") as mock_upsert, \
+             patch("app.modules.universe.sync_repository.SyncStatusRepository.get_last_successful_sync",
+                   return_value=stale_time), \
+             patch("app.modules.universe.ingestion_service.UniverseIngestionService.ingest_universe_discovery", return_value=10) as mock_ingest, \
              patch("app.modules.funds.repository.FundRepository.get_by_category", return_value=[FAKE_CACHE_ROW]):
             res = client.get("/api/v1/funds", params={"category": "largecap"})
         assert res.status_code == 200
-        mock_fetch.assert_called_once()
-        mock_upsert.assert_called_once()
+        # Freshness-based Trigger check: Stale cache reads MUST trigger a safe refresh
+        mock_ingest.assert_called_once()
 
     def test_falls_back_to_stale_cache_if_refresh_fails_but_data_exists(self):
         stale_time = datetime.now(timezone.utc) - timedelta(hours=48)
         with patch("app.modules.funds.repository.FundRepository.get_latest_refresh_time",
                    return_value=stale_time), \
-             patch("app.integrations.amfi.fetch_and_parse_funds", side_effect=Exception("AMFI down")), \
+             patch("app.modules.universe.sync_repository.SyncStatusRepository.get_last_successful_sync",
+                   return_value=stale_time), \
+             patch("app.modules.universe.ingestion_service.UniverseIngestionService.ingest_universe_discovery", return_value=0) as mock_ingest, \
              patch("app.modules.funds.repository.FundRepository.get_by_category", return_value=[FAKE_CACHE_ROW]):
             res = client.get("/api/v1/funds", params={"category": "largecap"})
         assert res.status_code == 200  # degraded gracefully, not a hard failure
+        # Freshness-based Trigger check: Stale cache reads MUST trigger a safe refresh
+        mock_ingest.assert_called_once()
 
     def test_503_when_no_cache_exists_and_refresh_fails(self):
         with patch("app.modules.funds.repository.FundRepository.get_latest_refresh_time", return_value=None), \
-             patch("app.integrations.amfi.fetch_and_parse_funds", side_effect=Exception("AMFI down")):
+             patch("app.modules.universe.ingestion_service.UniverseIngestionService.ingest_universe_discovery", return_value=0) as mock_ingest:
             res = client.get("/api/v1/funds", params={"category": "largecap"})
         assert res.status_code == 503
+        # Cold start (empty database) MUST trigger refresh ingestion
+        mock_ingest.assert_called_once()
 
 
 class TestGetFundDetail:
