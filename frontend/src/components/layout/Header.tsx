@@ -19,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, title = 'Goal-B
         </button>
         <div className="header-logo-mobile">
           <Target className="logo-icon-sm" />
-          <span className="logo-text-sm">InvestPlan</span>
+          <span className="logo-text-sm">FinPilot</span>
         </div>
         <h1 className="header-page-title">{title}</h1>
       </div>

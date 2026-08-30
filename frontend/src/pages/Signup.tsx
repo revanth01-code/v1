@@ -79,7 +79,7 @@ export const Signup: React.FC = () => {
       <div className="auth-header">
         <div className="auth-logo">
           <Target className="logo-icon-lg" />
-          <h2>InvestPlan</h2>
+          <h2>FinPilot</h2>
         </div>
         <p className="auth-subtitle">Create an account to begin planning your goals</p>
       </div>

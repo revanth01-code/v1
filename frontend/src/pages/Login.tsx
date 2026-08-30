@@ -51,7 +51,7 @@ export const Login: React.FC = () => {
       <div className="auth-header">
         <div className="auth-logo">
           <Target className="logo-icon-lg" />
-          <h2>InvestPlan</h2>
+          <h2>FinPilot</h2>
         </div>
         <p className="auth-subtitle">Sign in to manage your investment goals</p>
       </div>
