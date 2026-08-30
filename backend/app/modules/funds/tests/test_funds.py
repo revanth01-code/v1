@@ -1,9 +1,15 @@
+import pytest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 from app.main import app
+from app.modules.funds.service import FundService
 
 client = TestClient(app)
+
+@pytest.fixture(autouse=True)
+def reset_refresh_throttle_fixture():
+    FundService.reset_refresh_throttle()
 
 FAKE_CACHE_ROW = {
     "scheme_code": "100001",

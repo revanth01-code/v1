@@ -110,6 +110,17 @@ class MetricsService:
                 logger.error(f"Unexpected error processing {identifier}: {e}")
                 summary["store_failures"] += 1
 
+        # Step 3: Compute and persist recommendation scores once for the entire universe
+        if not dry_run:
+            logger.info("Triggering recommendation score calculation for the universe...")
+            try:
+                scoring_summary = MetricsService.calculate_and_persist_recommendation_scores()
+                summary["recommendation_scores_summary"] = scoring_summary
+                logger.info(f"Recommendation scores computed successfully: {scoring_summary}")
+            except Exception as e:
+                logger.error(f"Failed to calculate and persist recommendation scores: {e}")
+                summary["recommendation_scores_summary"] = {"error": str(e)}
+
         return summary
 
     @staticmethod
@@ -238,3 +249,87 @@ class MetricsService:
             "by_data_confidence": confidence_counts,
             "by_peer_reliability": peer_reliability_counts,
         }
+
+    @staticmethod
+    def calculate_and_persist_recommendation_scores() -> dict:
+        """Groups stored metrics by subcategory, calculates scores, and persists them.
+        
+        Does not recompute any historical observation analytics or perform provider fetches.
+        """
+        # Step 1: Retrieve all metrics records
+        all_metrics_records = []
+        page = 0
+        page_size = 1000
+        while True:
+            batch = MetricsRepository.get_all_metrics(limit=page_size, offset=page * page_size)
+            all_metrics_records.extend(batch)
+            if len(batch) < page_size:
+                break
+            page += 1
+
+        if not all_metrics_records:
+            return {
+                "total_processed": 0,
+                "updated_scores": 0,
+                "null_scores": 0,
+                "failures": 0,
+                "subcategories_processed": 0,
+            }
+
+        # Step 2: Build identifier -> subcategory mapping from asset_universe
+        from app.modules.universe.repository import UniverseRepository
+        id_to_subcat = {}
+        page = 0
+        page_size = 1000
+        while True:
+            assets = UniverseRepository.list_assets(limit=page_size, offset=page * page_size)
+            for a in assets:
+                id_to_subcat[a["identifier"]] = a["subcategory"]
+            if len(assets) < page_size:
+                break
+            page += 1
+
+        # Step 3: Group records by subcategory
+        grouped_funds = {}
+        for rec in all_metrics_records:
+            identifier = rec["identifier"]
+            subcat = id_to_subcat.get(identifier, "unknown")
+            
+            fund_data = {
+                "identifier": identifier,
+                "subcategory": subcat,
+                "metrics": rec["metrics"],
+                "data_confidence": rec["data_confidence"],
+                "peer_reliability": rec["peer_reliability"],
+            }
+            if subcat not in grouped_funds:
+                grouped_funds[subcat] = []
+            grouped_funds[subcat].append(fund_data)
+
+        # Step 4: Calculate and update scores per subcategory group
+        summary = {
+            "total_processed": 0,
+            "updated_scores": 0,
+            "null_scores": 0,
+            "failures": 0,
+            "subcategories_processed": len(grouped_funds),
+        }
+        
+        from app.modules.universe.recommendation.scoring_engine import RecommendationScoringEngine
+        for subcat, peer_funds in grouped_funds.items():
+            scored_peers = RecommendationScoringEngine.calculate_scores(peer_funds)
+            for f in scored_peers:
+                identifier = f["identifier"]
+                score = f.get("recommendation_score")
+                
+                success = MetricsRepository.update_recommendation_score(identifier, score)
+                if success:
+                    summary["total_processed"] += 1
+                    if score is not None:
+                        summary["updated_scores"] += 1
+                    else:
+                        summary["null_scores"] += 1
+                else:
+                    summary["failures"] += 1
+
+        return summary

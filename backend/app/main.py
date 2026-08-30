@@ -12,6 +12,7 @@ from app.core.limiter import limiter
 from app.middleware.error_handlers import (
     app_error_handler,
     feasibility_blocked_handler,
+    postgrest_api_error_handler,
     unhandled_error_handler,
 )
 from app.middleware.logging import log_requests
@@ -26,6 +27,7 @@ from app.modules.retirement.router import router as retirement_router
 from app.modules.simulation.router import router as simulation_router
 from app.modules.universe.router import router as universe_router
 from app.modules.portfolio.router import router as portfolio_router
+from app.modules.recommendation.router import router as recommendation_router
 
 if settings.SENTRY_DSN:
     sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=0.1, environment=settings.ENV)
@@ -55,6 +57,12 @@ def create_app() -> FastAPI:
 
     app.add_exception_handler(FeasibilityBlockedError, feasibility_blocked_handler)
     app.add_exception_handler(AppError, app_error_handler)
+
+    # Must be registered BEFORE the generic Exception handler so it takes precedence.
+    # Import lazily to keep the import at the top clean.
+    from postgrest.exceptions import APIError as PostgRESTAPIError
+    app.add_exception_handler(PostgRESTAPIError, postgrest_api_error_handler)
+
     app.add_exception_handler(Exception, unhandled_error_handler)
 
     @app.get("/health")
@@ -72,6 +80,7 @@ def create_app() -> FastAPI:
     app.include_router(simulation_router, prefix=API_PREFIX)
     app.include_router(universe_router, prefix=API_PREFIX)
     app.include_router(portfolio_router, prefix=API_PREFIX)
+    app.include_router(recommendation_router, prefix=API_PREFIX)
 
     return app
 

@@ -125,3 +125,74 @@ class TestAdvisoryLockingAndIngestion:
         mock_try_start.assert_called_once_with("latest_nav")
         mock_failure.assert_called_once()
 
+
+class TestRecommendationComputeAPI:
+    def test_missing_admin_key_header_unauthorized(self):
+        response = client.post("/api/v1/universe/recommendations/compute")
+        assert response.status_code in [401, 403]
+        
+    def test_invalid_admin_key_header_unauthorized(self):
+        response = client.post(
+            "/api/v1/universe/recommendations/compute",
+            headers={"x-admin-key": "wrong-secret-key"}
+        )
+        assert response.status_code in [401, 403]
+
+    @patch("app.modules.universe.metrics_service.MetricsService.calculate_and_persist_recommendation_scores")
+    def test_valid_admin_key_triggers_scoring_success(self, mock_scoring):
+        mock_scoring.return_value = {
+            "total_processed": 10,
+            "updated_scores": 8,
+            "null_scores": 2,
+            "failures": 0,
+            "subcategories_processed": 2,
+        }
+        
+        from app.modules.universe.router import ADMIN_API_KEY
+        
+        response = client.post(
+            "/api/v1/universe/recommendations/compute",
+            headers={"x-admin-key": ADMIN_API_KEY}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert data["funds_scored"] == 8
+        assert data["funds_skipped"] == 2
+        assert data["subcategories_processed"] == 2
+        mock_scoring.assert_called_once()
+
+
+class TestScoringIntegration:
+    @patch("app.modules.universe.metrics_repository.MetricsRepository.get_all_identifiers_with_observations")
+    @patch("app.modules.universe.metrics_service.MetricsService._process_one")
+    @patch("app.modules.universe.metrics_service.MetricsService.calculate_and_persist_recommendation_scores")
+    def test_scoring_runs_once_after_metrics_computation(self, mock_scoring, mock_process, mock_get_obs):
+        mock_get_obs.return_value = ["fund1", "fund2", "fund3"]
+        mock_process.return_value = "stored"
+        mock_scoring.return_value = {"updated_scores": 3, "null_scores": 0, "subcategories_processed": 1}
+        
+        from app.modules.universe.metrics_service import MetricsService
+        summary = MetricsService.compute_and_store_all(dry_run=False)
+        
+        # Verify metrics processed for all funds
+        assert mock_process.call_count == 3
+        # Verify scoring engine triggered exactly once at the end
+        mock_scoring.assert_called_once()
+        assert summary["recommendation_scores_summary"]["updated_scores"] == 3
+
+    @patch("app.modules.universe.metrics_repository.MetricsRepository.get_all_identifiers_with_observations")
+    @patch("app.modules.universe.metrics_service.MetricsService._process_one")
+    @patch("app.modules.universe.metrics_service.MetricsService.calculate_and_persist_recommendation_scores")
+    def test_scoring_skipped_on_dry_run(self, mock_scoring, mock_process, mock_get_obs):
+        mock_get_obs.return_value = ["fund1"]
+        mock_process.return_value = "stored"
+        
+        from app.modules.universe.metrics_service import MetricsService
+        summary = MetricsService.compute_and_store_all(dry_run=True)
+        
+        mock_process.assert_called_once()
+        # Should NOT run scoring on dry run
+        mock_scoring.assert_not_called()
+        assert "recommendation_scores_summary" not in summary
+

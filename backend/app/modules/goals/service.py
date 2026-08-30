@@ -1,3 +1,5 @@
+import structlog
+from typing import Any, Optional
 from datetime import date
 from app.core.constants import DEFAULT_INFLATION_PCT, FUND_CATEGORY_MIX, RISK_RETURN_MAP
 from app.core.exceptions import AppError, FeasibilityBlockedError
@@ -5,9 +7,11 @@ from app.lib.date_utils import months_between
 from app.modules.feasibility_engine.schemas import FeasibilityInput
 from app.modules.feasibility_engine.service import FeasibilityEngine
 from .repository import GoalRepository
-from .schemas import GoalCheckResponse, GoalCreate, GoalOut
+from .schemas import GoalCheckResponse, GoalCreate, GoalOut, GoalStrategyPreviewRequest
 from .validators import derive_term_type, validate_risk_for_term
 from app.modules.funds.service import FundService
+
+logger = structlog.get_logger()
 
 # Baseline inflation rate assumptions by goal category
 BASE_INFLATION_MAP = {
@@ -249,7 +253,11 @@ class GoalService:
 
     @staticmethod
     def create(access_token: str, user_id: str, payload: GoalCreate) -> GoalOut:
+        log = logger.bind(user_id=user_id, goal_name=payload.name)
+        log.info("goal_create_started", target_amount=payload.target_amount, contribution_mode=payload.contribution_mode)
+
         term_type, guardrail, feasibility, strategies = _run_check(payload)
+        log.info("goal_feasibility_checked", feasibility_status=feasibility.get("status"), term_type=term_type)
 
         if not guardrail["allowed"]:
             raise AppError(guardrail["warning"], 422)
@@ -303,9 +311,15 @@ class GoalService:
             "priority_rank": payload.priority_rank,
         }
 
+        log.info("goal_db_insert_started", feasibility_status=db_feasibility_status)
         row = GoalRepository.create(access_token, user_id, row_payload)
+        log.info("goal_db_insert_completed", goal_id=row.get("id"))
+
         enriched = _enrich_goal_out(row)
-        return GoalOut(**enriched, recommended_funds=_attach_recommended_funds(row["fund_category_mix"]))
+        log.info("goal_fund_attachment_started", categories=list(row["fund_category_mix"].keys()))
+        funds = _attach_recommended_funds(row["fund_category_mix"])
+        log.info("goal_create_completed", goal_id=row.get("id"))
+        return GoalOut(**enriched, recommended_funds=funds)
 
     @staticmethod
     def list_goals(access_token: str, user_id: str, limit: int = 20, offset: int = 0, attach_funds: bool = False) -> list[GoalOut]:
@@ -324,3 +338,238 @@ class GoalService:
             raise AppError("Goal not found", 404)
         enriched = _enrich_goal_out(row)
         return GoalOut(**enriched, recommended_funds=_attach_recommended_funds(row["fund_category_mix"]))
+
+    @staticmethod
+    def preview_strategy(payload: GoalStrategyPreviewRequest) -> dict:
+        from app.modules.tax.tax_service import TaxProfile, TaxOpportunityService
+        
+        # 1. Proposed strategy build
+        from app.core.constants import FUND_CATEGORY_MIX
+        
+        # Calculate months
+        months = months_between(date.today(), payload.target_date)
+        horizon_years = round(months / 12, 1)
+        
+        mix = FUND_CATEGORY_MIX[payload.risk_level]
+        
+        equity = 0
+        debt = 0
+        diversifier = 0
+        for cat, pct in mix.items():
+            if cat in ["largecap", "flexicap", "midcap"]:
+                equity += pct
+            elif cat == "debt":
+                debt += pct
+                
+        formatted_mix = [{"category": cat, "allocation_percent": pct} for cat, pct in mix.items()]
+        
+        # Generate explanations
+        reasoning = []
+        if months < 36:
+            reasoning.append(f"Your short-term investment horizon ({horizon_years} years) prioritizes capital preservation.")
+        else:
+            reasoning.append(f"Your {horizon_years}-year investment horizon allows moderate/higher equity exposure.")
+            
+        if payload.risk_level == "low":
+            reasoning.append("Your selected risk level limits high-volatility categories and allocates more to debt.")
+        elif payload.risk_level == "mid":
+            reasoning.append("Your selected risk level balances growth and stability across equity and debt.")
+        elif payload.risk_level == "high":
+            reasoning.append("Your selected risk level prioritizes capital appreciation through pure equity allocation.")
+            
+        # Optional tax optimization note
+        tax_profile_data = payload.tax_profile
+        if tax_profile_data and tax_profile_data.get("wants_tax_optimization"):
+            reasoning.append("Tax optimization preferences were considered separately from fund quality.")
+            
+        strategy = {
+            "investment_horizon_years": horizon_years,
+            "risk_level": payload.risk_level,
+            "allocation": {
+                "equity": equity,
+                "debt": debt,
+                "diversifier": diversifier
+            },
+            "fund_category_mix": formatted_mix,
+            "reasoning": reasoning
+        }
+        
+        # 2. Tax profile analysis
+        tax_p = None
+        if tax_profile_data:
+            tax_p = TaxProfile(**tax_profile_data)
+        tax_summary = TaxOpportunityService.analyze_profile(tax_p)
+        
+        return {
+            "strategy": strategy,
+            "tax_summary": tax_summary,
+            "next_step": "review_strategy"
+        }
+
+    @staticmethod
+    def finalize_strategy(payload: Any) -> dict:
+        from app.modules.tax.tax_service import TaxProfile, TaxOpportunityService
+        from app.core.constants import FUND_CATEGORY_MIX
+        
+        preferences = payload.preferences
+        tax_profile = payload.tax_profile
+        
+        # Calculate horizon
+        months = months_between(date.today(), payload.target_date)
+        horizon_years = round(months / 12, 1)
+        
+        base_mix = FUND_CATEGORY_MIX[payload.risk_level]
+        
+        # Adjust mix if ELSS conditions are met
+        final_mix = adjust_mix_for_tax(base_mix, preferences, tax_profile)
+        
+        equity = 0
+        debt = 0
+        diversifier = 0
+        for cat, pct in final_mix.items():
+            if cat in ["largecap", "flexicap", "midcap", "elss"]:
+                equity += pct
+            elif cat == "debt":
+                debt += pct
+                
+        formatted_mix = [{"category": cat, "allocation_percent": pct} for cat, pct in final_mix.items()]
+        
+        # Generate explanations
+        reasoning = []
+        if months < 36:
+            reasoning.append(f"Your short-term investment horizon ({horizon_years} years) prioritizes capital preservation.")
+        else:
+            reasoning.append(f"Your {horizon_years}-year investment horizon allows moderate/higher equity exposure.")
+            
+        if payload.risk_level == "low":
+            reasoning.append("Your selected risk level limits high-volatility categories and allocates more to debt.")
+        elif payload.risk_level == "mid":
+            reasoning.append("Your selected risk level balances growth and stability across equity and debt.")
+        elif payload.risk_level == "high":
+            reasoning.append("Your selected risk level prioritizes capital appreciation through pure equity allocation.")
+            
+        if preferences and preferences.tax_optimization_preference:
+            reasoning.append("Tax optimization preferences were considered separately from fund quality.")
+            
+        strategy = {
+            "investment_horizon_years": horizon_years,
+            "risk_level": payload.risk_level,
+            "allocation": {
+                "equity": equity,
+                "debt": debt,
+                "diversifier": diversifier
+            },
+            "fund_category_mix": formatted_mix,
+            "reasoning": reasoning
+        }
+        
+        # Tax opportunity analysis
+        tax_summary = TaxOpportunityService.analyze_profile(tax_profile)
+        
+        # Build selection rules
+        selection_rules = [
+            "Exclude funds with INSUFFICIENT data confidence.",
+            "Exclude funds without a calculated peer recommendation score.",
+            "Rank funds primarily by recommendation_score descending within each category.",
+            "Sort secondarily by data_confidence priority: HIGH, MEDIUM, LOW.",
+            "Resolve final ties alphabetically by asset name."
+        ]
+        if "elss" in final_mix:
+            selection_rules.append(
+                "ELSS is being considered because you selected tax optimization and indicated that you can accept a 3-year lock-in."
+            )
+            
+        plan_categories = [{"category": cat, "allocation_percent": pct} for cat, pct in final_mix.items()]
+        recommendation_plan = {
+            "categories": plan_categories,
+            "selection_rules": selection_rules
+        }
+        
+        return {
+            "strategy": strategy,
+            "user_preferences": preferences,
+            "tax_summary": tax_summary,
+            "recommendation_plan": recommendation_plan,
+            "next_step": "view_recommendations"
+        }
+
+    @staticmethod
+    def get_recommendations_preview(payload: Any) -> dict:
+        from datetime import datetime, timezone
+        
+        # 1. Finalize strategy to get the correct fund mix (including any tax adjustment)
+        finalize_result = GoalService.finalize_strategy(payload)
+        
+        strategy = finalize_result["strategy"]
+        tax_summary = finalize_result["tax_summary"]
+        
+        # Build category mix dict from strategy
+        mix_dict = {item["category"]: item["allocation_percent"] for item in strategy["fund_category_mix"]}
+        
+        # 2. Get recommendations
+        from app.modules.universe.recommendation.recommendation_service import RecommendationService
+        recommendations = RecommendationService.get_recommendations(
+            fund_category_mix=mix_dict,
+            investment_horizon_years=strategy["investment_horizon_years"],
+            risk_level=strategy["risk_level"],
+            preferences=payload.preferences,
+            tax_profile=payload.tax_profile
+        )
+        
+        engine_metadata = {
+            "ranking_method": "deterministic_peer_scoring",
+            "scoring_version": "1.1",
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "disclaimer": "Recommendations are generated using historical data and deterministic evaluation metrics and should not be considered guaranteed future performance."
+        }
+        
+        return {
+            "strategy": strategy,
+            "tax_summary": tax_summary,
+            "recommendations": recommendations,
+            "engine_metadata": engine_metadata
+        }
+
+
+def adjust_mix_for_tax(mix: dict, preferences: Optional[Any], tax_profile: Optional[Any]) -> dict:
+    if not preferences or not tax_profile:
+        return mix
+    
+    # Check 3 conditions:
+    # 1. Tax optimization is requested
+    # 2. Section 80C opportunity exists (i.e. regime is not new, and remaining limit > 0)
+    # 3. User accepts lock-in
+    tax_opt = getattr(preferences, "tax_optimization_preference", None)
+    lock_in = getattr(preferences, "accept_lock_in", None)
+    
+    if not (tax_opt is True and lock_in is True):
+        return mix
+    
+    tax_regime = getattr(tax_profile, "tax_regime", "unknown")
+    if tax_regime == "new":
+        return mix
+    
+    existing_investments = getattr(tax_profile, "existing_tax_saving_investments_range", 0.0)
+    remaining_80c = 150000.0 - existing_investments
+    if remaining_80c <= 0:
+        return mix
+        
+    # If eligible, allocate 15% to ELSS.
+    # We take the 15% from the non-debt categories.
+    new_mix = mix.copy()
+    non_debt_cats = [c for c in new_mix.keys() if c != "debt"]
+    if not non_debt_cats:
+        return mix  # No equity to take from
+        
+    elss_allocation = 15.0
+    # Proportional subtraction
+    total_non_debt = sum(new_mix[c] for c in non_debt_cats)
+    if total_non_debt <= 0:
+        return mix
+        
+    for c in non_debt_cats:
+        deduction = (new_mix[c] / total_non_debt) * elss_allocation
+        new_mix[c] = round(max(0.0, new_mix[c] - deduction), 2)
+        
+    new_mix["elss"] = elss_allocation
+    return new_mix

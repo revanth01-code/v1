@@ -11,9 +11,13 @@ from app.modules.funds.repository import (
     resolve_legacy_category_from_row
 )
 from app.core.constants import LEGACY_TO_UNIVERSE_SUBCAT_MAP, UNIVERSE_TO_LEGACY_CAT_MAP
-from app.modules.goals.service import GoalService
+from app.modules.funds.service import FundService
 
 client = TestClient(app)
+
+@pytest.fixture(autouse=True)
+def reset_refresh_throttle_fixture():
+    FundService.reset_refresh_throttle()
 
 
 class TestFundRepositoryMigration:

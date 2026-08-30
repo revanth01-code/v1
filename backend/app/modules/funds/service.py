@@ -109,6 +109,12 @@ _category_funds_cache_timestamp = {}
 
 class FundService:
     @staticmethod
+    def reset_refresh_throttle() -> None:
+        """Resets the last auto refresh attempt timestamp, primarily for testing isolation."""
+        global _last_auto_refresh_attempt
+        _last_auto_refresh_attempt = None
+
+    @staticmethod
     def ensure_fresh_cache() -> None:
         """
         Ensures mutual fund data exists and refreshes stale data safely.

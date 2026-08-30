@@ -290,3 +290,18 @@ class MetricsRepository:
         except Exception as e:
             logger.error(f"Failed to count asset_metrics records: {e}")
             return 0
+
+    @staticmethod
+    def update_recommendation_score(identifier: str, score: Optional[float]) -> bool:
+        """Update the recommendation_score column for a specific asset identifier.
+        
+        Returns True on success, False on failure.
+        """
+        try:
+            supabase_admin.table(METRICS_TABLE).update(
+                {"recommendation_score": score}
+            ).eq("identifier", identifier).execute()
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update recommendation_score for {identifier}: {e}")
+            return False

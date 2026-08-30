@@ -1,10 +1,19 @@
+from typing import Any
 from fastapi import APIRouter, Depends, status
 from app.middleware.auth import get_current_user, get_access_token
 from app.modules.auth.schemas import UserOut
-from .schemas import GoalCheckResponse, GoalCreate, GoalOut
+from .schemas import GoalCheckResponse, GoalCreate, GoalOut, GoalStrategyPreviewRequest, GoalStrategyPreviewResponse
+from app.modules.universe.recommendation.schemas import GoalStrategyFinalizeRequest, GoalStrategyFinalizeResponse
 from .service import GoalService
 from .priority_schemas import PriorityRankIn, PriorityAnalysisOut
 from .priority_service import PriorityService
+from app.modules.goals.feasibility import (
+    GoalFeasibilityPreviewRequest,
+    GoalFeasibilityPreviewResponse,
+    GoalFeasibilityApplyRequest,
+    GoalFeasibilityApplyResponse,
+    FeasibilityService
+)
 
 router = APIRouter(prefix="/goals", tags=["goals"])
 
@@ -49,6 +58,51 @@ def get_priority_analysis(
     token: str = Depends(get_access_token),
 ):
     return PriorityService.get_priority_analysis(token, user.id)
+
+
+@router.post("/strategy/preview", response_model=GoalStrategyPreviewResponse)
+def preview_goal_strategy(
+    payload: GoalStrategyPreviewRequest,
+    user: UserOut = Depends(get_current_user)
+):
+    """Generates an interactive strategy and tax preview for a goal, without persisting changes."""
+    return GoalService.preview_strategy(payload)
+
+
+@router.post("/strategy/finalize", response_model=GoalStrategyFinalizeResponse)
+def finalize_goal_strategy(
+    payload: GoalStrategyFinalizeRequest,
+    user: UserOut = Depends(get_current_user)
+):
+    """Finalizes user preferences and tax optimization profile, returning a finalized strategy plan."""
+    return GoalService.finalize_strategy(payload)
+
+
+@router.post("/strategy/recommendations", response_model=Any)
+def get_goal_recommendations_preview(
+    payload: GoalStrategyFinalizeRequest,
+    user: UserOut = Depends(get_current_user)
+):
+    """Generates ranked, compatible mutual fund recommendations based on final strategy and preferences."""
+    return GoalService.get_recommendations_preview(payload)
+
+
+@router.post("/feasibility/preview", response_model=GoalFeasibilityPreviewResponse)
+def preview_goal_feasibility(
+    payload: GoalFeasibilityPreviewRequest,
+    user: UserOut = Depends(get_current_user)
+):
+    """Evaluates planned vs required investments and returns strategy alternatives."""
+    return FeasibilityService.calculate_feasibility(payload)
+
+
+@router.post("/feasibility/apply", response_model=GoalFeasibilityApplyResponse)
+def apply_feasibility_alternative(
+    payload: GoalFeasibilityApplyRequest,
+    user: UserOut = Depends(get_current_user)
+):
+    """Applies a selected alternative strategy to generate a revised preview."""
+    return FeasibilityService.apply_alternative(payload)
 
 
 @router.get("/{goal_id}", response_model=GoalOut)

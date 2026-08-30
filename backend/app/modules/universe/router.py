@@ -127,6 +127,21 @@ def trigger_metrics_computation(admin_key: None = Depends(verify_admin_key)):
     }
 
 
+@router.post("/recommendations/compute", status_code=status.HTTP_200_OK)
+def trigger_recommendation_scoring(admin_key: None = Depends(verify_admin_key)):
+    """Groups stored metrics by subcategory, calculates scores, and updates the database.
+
+    Protected: requires x-admin-key header.
+    """
+    summary = MetricsService.calculate_and_persist_recommendation_scores()
+    return {
+        "status": "success",
+        "funds_scored": summary.get("updated_scores", 0),
+        "funds_skipped": summary.get("null_scores", 0),
+        "subcategories_processed": summary.get("subcategories_processed", 0)
+    }
+
+
 @router.post("/assets/{identifier}/compute-metrics", status_code=status.HTTP_200_OK)
 def trigger_single_asset_metrics(
     identifier: str,
