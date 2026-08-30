@@ -301,6 +301,7 @@ class GoalService:
             "inflation_rate_pct": inflation_rate,
             "inflation_rate_override": payload.inflation_rate_override,
             "priority_rank": payload.priority_rank,
+            "sip_day": payload.sip_day,
         }
 
         row = GoalRepository.create(access_token, user_id, row_payload)

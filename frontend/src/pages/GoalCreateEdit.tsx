@@ -50,7 +50,7 @@ const goalSchema = z
       .min(0, 'Lumpsum amount cannot be negative'),
 
     risk_level: z.enum(['low', 'mid', 'high']),
-    
+
     goal_type: z.enum([
       'vacation',
       'house',
@@ -61,18 +61,25 @@ const goalSchema = z
       'healthcare',
       'custom',
     ]),
-    
+
     priority: z.enum(['low', 'medium', 'high']),
-    
+
     deadline_flexibility: z.enum(['flexible', 'semi-flexible', 'inflexible']),
-    
+
     importance: z.enum(['optional', 'important', 'mandatory']),
-    
+
     inflation_scenario: z.enum(['conservative', 'expected', 'high']),
-    
+
     inflation_rate_override: z
       .number()
       .min(0, 'Cannot be negative')
+      .nullable()
+      .optional(),
+    has_sip: z.boolean().optional(),
+    sip_day: z
+      .number()
+      .min(1, 'SIP day must be between 1 and 28')
+      .max(28, 'SIP day must be between 1 and 28')
       .nullable()
       .optional(),
   })
@@ -127,6 +134,24 @@ const goalSchema = z
         'At least one of monthly contribution or lumpsum must be greater than 0',
       path: ['monthly_contribution'],
     }
+  )
+  .refine(
+    (data) => {
+      if (data.contribution_mode !== 'lumpsum' && data.has_sip) {
+        return (
+          data.sip_day !== null &&
+          data.sip_day !== undefined &&
+          !isNaN(data.sip_day) &&
+          data.sip_day >= 1 &&
+          data.sip_day <= 28
+        );
+      }
+      return true;
+    },
+    {
+      message: 'SIP payment day must be between 1 and 28',
+      path: ['sip_day'],
+    }
   );
 
 type GoalFormData = z.infer<typeof goalSchema>;
@@ -171,6 +196,8 @@ export const GoalCreateEdit: React.FC = () => {
       importance: 'important',
       inflation_scenario: 'expected',
       inflation_rate_override: null,
+      has_sip: false,
+      sip_day: null,
     },
   });
 
@@ -222,6 +249,7 @@ export const GoalCreateEdit: React.FC = () => {
           importance: formValues.importance,
           inflation_scenario: formValues.inflation_scenario,
           inflation_rate_override: formValues.inflation_rate_override || null,
+          sip_day: formValues.contribution_mode !== 'lumpsum' && formValues.has_sip ? (Number(formValues.sip_day) || null) : null,
         };
 
         const result = await goalsService.checkGoal(payload);
@@ -248,6 +276,8 @@ export const GoalCreateEdit: React.FC = () => {
     formValues.importance,
     formValues.inflation_scenario,
     formValues.inflation_rate_override,
+    formValues.has_sip,
+    formValues.sip_day,
   ]);
 
   const saveMutation = useMutation({
@@ -275,9 +305,11 @@ export const GoalCreateEdit: React.FC = () => {
     setFeasibilityError(null);
 
     // Make sure nullable fields are correctly clean
+    const { has_sip, ...rest } = data;
     const cleaned = {
-      ...data,
+      ...rest,
       inflation_rate_override: data.inflation_rate_override || null,
+      sip_day: data.contribution_mode !== 'lumpsum' && data.has_sip ? (Number(data.sip_day) || null) : null,
     };
 
     saveMutation.mutate(cleaned);
@@ -522,8 +554,11 @@ export const GoalCreateEdit: React.FC = () => {
                       return (
                         <div className="form-group">
                           <label className="form-label">
-                            Monthly Contribution
-                            <InfoTooltip term="Monthly Contribution" explanation="The amount you plan to invest every month towards this goal." />
+                            {formValues.has_sip ? 'Monthly SIP Amount' : 'Monthly Contribution'}
+                            <InfoTooltip
+                              term={formValues.has_sip ? 'Monthly SIP Amount' : 'Monthly Contribution'}
+                              explanation={formValues.has_sip ? 'The amount you plan to invest via monthly SIP towards this goal.' : 'The amount you plan to invest every month towards this goal.'}
+                            />
                           </label>
 
                           <div className="currency-input-wrapper">
@@ -584,6 +619,65 @@ export const GoalCreateEdit: React.FC = () => {
                   />
                 )}
               </div>
+
+              {formValues.contribution_mode !== 'lumpsum' && (
+                <div className="form-row-2 mt-2">
+                  <div className="form-group">
+                    <label htmlFor="has_sip" className="form-label">
+                      Do you have a monthly SIP for this goal?
+                    </label>
+                    <select
+                      id="has_sip"
+                      className="form-control"
+                      value={formValues.has_sip ? 'yes' : 'no'}
+                      onChange={(e) => {
+                        const val = e.target.value === 'yes';
+                        setValue('has_sip', val);
+                        if (!val) {
+                          setValue('sip_day', null);
+                        }
+                      }}
+                    >
+                      <option value="no">No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                  </div>
+
+                  {formValues.has_sip ? (
+                    <div className="form-group">
+                      <label htmlFor="sip_day" className="form-label">
+                        SIP Payment Day
+                        <InfoTooltip
+                          term="SIP Payment Day"
+                          explanation="SIP payment day is the day of each month when your recurring SIP is scheduled. InvestPlan uses this to send you timely reminders."
+                        />
+                      </label>
+                      <select
+                        id="sip_day"
+                        className="form-control"
+                        {...register('sip_day', { valueAsNumber: true })}
+                      >
+                        <option value="">Select a day (1-28)</option>
+                        {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                          <option key={day} value={day}>
+                            {day}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="d-flex justify-content-between text-secondary text-xs mt-1">
+                        <span>Choose the day of the month your SIP is scheduled.</span>
+                      </div>
+                      {errors.sip_day?.message && (
+                        <div className="text-danger text-xs mt-1">
+                          {errors.sip_day.message}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="form-group" />
+                  )}
+                </div>
+              )}
 
               <hr className="divider-dark my-4" />
               <h4 className="section-title mb-3 d-flex align-items-center">
@@ -989,10 +1083,10 @@ export const GoalCreateEdit: React.FC = () => {
                             formValues.risk_level === 'mid' ? 'moderate' : 'aggressive'
                           )
                         );
-                        
+
                         return (
-                          <div 
-                            key={name} 
+                          <div
+                            key={name}
                             className={`strategy-card p-3 rounded-lg border bg-surface-dark-only ${isCurrentSelected ? 'border-primary' : 'border-dark'}`}
                           >
                             <div className="d-flex justify-content-between align-items-center">
